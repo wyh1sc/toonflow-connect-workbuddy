@@ -37,6 +37,8 @@ generateImage? / generateVideo? / generateAudio?
 .
 ├── tool/workbuddyConnect.tool.js   # Toonflow tools 插件本体
 ├── proxy/wb_proxy.py               # 本机中转（OpenAI 兼容 + 媒体 + 账号池）
+├── scripts/setup_text_provider.py  # 一键把代理里的文本模型写进 Toonflow 供应商
+├── scripts/model_rates.py          # 模型倍率 / 拥挤度对照表（终端 + HTML）
 └── docs/INSTALL.md                 # 安装与排障
 ```
 
@@ -55,6 +57,44 @@ generateImage? / generateVideo? / generateAudio?
 
 - `proxyUrl`，默认 `http://127.0.0.1:8189`
 - `outputDir`，默认 `assets/generated`，必须是工作区内的相对路径
+
+### `scripts/setup_text_provider.py`
+
+把代理 `/v1/models` 里的对话模型一键写进 Toonflow 的文本供应商（`settings.customProviders`），不用手点界面。
+
+```bash
+python scripts/setup_text_provider.py              # 自动找 Toonflow 端口并写入
+python scripts/setup_text_provider.py --dry-run    # 只看会写什么，不动手
+python scripts/setup_text_provider.py --port 54149 --label WorkBuddy
+```
+
+- 端口查找顺序：`--port` → `TF_PORT` → `TOONFLOW_HOME` / `%LOCALAPPDATA%\toonflow` / 安装根下的 `app/Resources/desktopRuntime.json`。
+- 幂等：按 `id` 小写等于 `workbuddy` 匹配，有就更新、没有就新建；写完会回读校验条数。
+- 模型字段映射：`label←display_name`、`contextWindow←inputTokenLimit`、`maxOutputTokens←outputTokenLimit`、`reasoningEfforts←reasoningEfforts`。
+
+### `scripts/model_rates.py`
+
+模型倍率 / 拥挤度对照表。倍率和拥挤度已被代理拼进 Toonflow 下拉的标签里，这个脚本解决的是「哪个最省积分、哪个现在不挤」。
+
+```bash
+python scripts/model_rates.py                    # 默认按倍率升序，只看对话模型
+python scripts/model_rates.py --sort busy        # 先看谁空闲
+python scripts/model_rates.py --filter v4 --all  # 关键词过滤，含媒体模型
+python scripts/model_rates.py --html rates.html  # 导出彩色 HTML 面板
+python scripts/model_rates.py --watch 30         # 每 30 秒刷新
+```
+
+```
+模型                    倍率   拥挤度    上下文  徽标      id
+----------------------  -----  --------  ------  --------  ----------------------
+Hy3                     0.00x  正常      192K    限时免费  hy3
+GLM-5.3-Flash           0.08x  空闲      1000K   订阅优先  glm-5.3-flash
+DeepSeek-V4.1-Flash     0.11x  正常      1000K   夜间折扣  deepseek-v4.1-flash
+...
+免费：Hy3
+最便宜（付费）：Hy3（0.05x）
+共 48 个对话模型
+```
 
 ### `proxy/wb_proxy.py`
 

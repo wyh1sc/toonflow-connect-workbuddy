@@ -74,6 +74,69 @@ curl http://127.0.0.1:8189/v1/media/models
 
 ---
 
+## 二点五、接文本模型（最常用）
+
+Toonflow 的**文本对话模型不是插件**，走的是 `settings.customProviders`。本仓库给了一键脚本。
+
+```bash
+# 代理已经起在 8189 之后执行
+python scripts/setup_text_provider.py --dry-run   # 先看看会写什么
+python scripts/setup_text_provider.py             # 写入
+```
+
+输出：
+
+```
+更新供应商 workbuddy：32 个模型
+保存 -> {"code": 200, ...}
+校验：Toonflow 里现有 32 个模型（应为 32）
+```
+
+脚本做的事：
+
+1. 找 Toonflow 后端端口（`--port` → `TF_PORT` → `desktopRuntime.json`）
+2. `GET {proxy}/v1/models` 拉本代理暴露的全部对话模型
+3. 映射成 Toonflow 的模型结构：`label←display_name`、`contextWindow←inputTokenLimit`、`maxOutputTokens←outputTokenLimit`、`reasoningEfforts←reasoningEfforts`
+4. 按 `id` 小写等于 `workbuddy` 匹配 upsert 进 `customProviders`
+5. `PUT /api/settings/save` 后回读校验
+
+`apiUrl` 固定写 `http://127.0.0.1:8189`、`protocol` 固定 `openai-completions`、`apiKey` 填 `no-key`（代理不校验，但字段必须非空）。
+
+写完后在 Toonflow 里模型下拉就能看到它们，标签形如：
+
+```
+DeepSeek-V4.1-Flash · 0.11x · 正常 · 夜间折扣
+        ↑模型名         ↑倍率  ↑拥挤度  ↑徽标
+```
+
+倍率和拥挤度是代理拼进 `label` 的（Toonflow 的模型 schema 只有 `id/label/contextWindow/maxOutputTokens/reasoningEfforts` 五个字段，没有专门的倍率位）。
+
+### 挑模型：`scripts/model_rates.py`
+
+```bash
+python scripts/model_rates.py                    # 倍率升序，只看对话模型
+python scripts/model_rates.py --sort busy        # 先看谁不挤
+python scripts/model_rates.py --filter v4 --all  # 关键词过滤
+python scripts/model_rates.py --html rates.html  # 导出彩色 HTML 面板
+```
+
+```
+模型                    倍率   拥挤度    上下文  徽标      id
+----------------------  -----  --------  ------  --------  ----------------------
+Hy3                     0.00x  正常      192K    限时免费  hy3
+GLM-5.3-Flash           0.08x  空闲      1000K   订阅优先  glm-5.3-flash
+DeepSeek-V4.1-Flash     0.11x  正常      1000K   夜间折扣  deepseek-v4.1-flash
+GLM-5.3                 0.69x  拥挤      1000K   订阅优先  glm-5.3
+
+免费：Hy3
+最便宜（付费）：Hy3（0.05x）
+共 48 个对话模型
+```
+
+`--html` 导出的是自包含单文件（深浅色自适应，倍率与拥挤度带色阶），可以直接扔给同事看。
+
+---
+
 ## 三、装 Toonflow 插件
 
 `tool/workbuddyConnect.tool.js` 单文件，两种装法。
