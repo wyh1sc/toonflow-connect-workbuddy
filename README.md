@@ -119,7 +119,7 @@ ELECTRON_RUN_AS_NODE=1 WorkBuddy.exe -e "process.stdout.write(process._linkedBin
 
 ### `tool/workbuddyConnect.tool.js`
 
-**v2 起是单文件自包含的**（约 11 万字符 / 2200 行）：模块顶层自动起 `Bun.serve`，内置凭据发现、AES-256-GCM 解密、账号池轮换、模型目录、文本对话聚合、生图、生视频异步任务。装进 Toonflow 后不需要任何外部进程。
+**v2 起是单文件自包含的**（11.0 万字符 / 2186 行）：模块顶层自动起 `Bun.serve`，内置凭据发现、AES-256-GCM 解密、账号池轮换、模型目录、文本对话聚合、生图、生视频异步任务。装进 Toonflow 后不需要任何外部进程。
 
 六个工具，每个都带一张卡片界面（见下节）：
 
