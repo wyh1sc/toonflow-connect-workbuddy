@@ -332,6 +332,22 @@ Get-CimInstance Win32_Process -Filter "Name='python.exe' or Name='pythonw.exe'" 
 
 `python scripts/install_tool_plugin.py --list` 里没看到 `workbuddyConnect` → 安装没成功，看返回的 `message`。
 
+### 开机自启没生效
+
+`install.py` 写的是 `HKCU\Software\Microsoft\Windows\CurrentVersion\Run` 的 `ToonflowWbProxy`。有些 OEM 启动项管理器（联想电脑管家等）会把第三方写入的值搬进子键 `Run\LenovoDisabled`，值变成 `rem|<原命令>`，看起来像被删了。
+
+判定：
+
+```powershell
+reg query "HKCU\Software\Microsoft\Windows\CurrentVersion\Run" /v ToonflowWbProxy
+reg query "HKCU\Software\Microsoft\Windows\CurrentVersion\Run\LenovoDisabled" /v ToonflowWbProxy
+```
+
+第二条有、第一条没有 → 被搬走了。两个办法：
+
+- 在启动项管理器里把 `ToonflowWbProxy` 设为启用/允许
+- 直接把快捷方式扔进 `shell:startup`（`%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup`），OEM 管理器不碰这个目录
+
 ### 工具在但 Agent 不调用
 
 - 在「设置 → 插件市场 → 已安装」确认开关是开着的
