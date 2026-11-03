@@ -1,0 +1,335 @@
+/* WorkBuddy 连接 —— 工具卡片样式。
+ * 全部走 --el-* 变量，浅色/深色主题自动跟随；类名统一 wbx- 前缀，避免与宿主样式冲突。 */
+
+.wbx-card {
+  box-sizing: border-box;
+  border: 1px solid var(--el-border-color-lighter, #e5e7eb);
+  background: var(--el-bg-color, #fff);
+  color: var(--el-text-color-primary, #1f2937);
+  border-radius: 14px;
+  padding: 15px 17px 13px;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  max-width: 560px;
+  overflow: hidden;
+}
+.wbx-card--err {
+  border-color: var(--el-color-danger-light-5, #f7bcbc);
+}
+
+/* 头部 */
+.wbx-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.wbx-logo {
+  width: 30px;
+  height: 30px;
+  flex: none;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(135deg, #2f6bff, #7a4bff);
+  user-select: none;
+}
+.wbx-headBody {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.wbx-title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  letter-spacing: 0.0125rem;
+}
+.wbx-sub {
+  color: var(--el-text-color-secondary, #6b7280);
+  font-size: 0.75rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wbx-tags {
+  margin-left: auto;
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.wbx-tag {
+  border-radius: 5px;
+  padding: 2px 8px;
+  font-size: 0.6875rem;
+  line-height: 1.1rem;
+  white-space: nowrap;
+}
+.wbx-tag--ok {
+  background: var(--el-color-success-light-9, #e8f8ef);
+  color: var(--el-color-success, #16a34a);
+}
+.wbx-tag--wait {
+  background: var(--el-color-warning-light-9, #fdf5e6);
+  color: var(--el-color-warning, #b45309);
+}
+.wbx-tag--err {
+  background: var(--el-color-danger-light-9, #fdeeee);
+  color: var(--el-color-danger, #dc2626);
+}
+.wbx-tag--info,
+.wbx-tag--muted {
+  background: var(--el-fill-color, #eef0f3);
+  color: var(--el-text-color-secondary, #6b7280);
+}
+
+/* 大数字 */
+.wbx-bigNum {
+  margin: 15px 0 2px;
+  font-size: 29px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+}
+.wbx-bigNum small {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--el-text-color-secondary, #6b7280);
+  margin-left: 6px;
+}
+
+/* 键值块 */
+.wbx-kv {
+  margin-top: 12px;
+  background: var(--el-fill-color-light, #f6f7f9);
+  border-radius: 10px;
+  padding: 9px 12px;
+}
+.wbx-kvRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 0.8125rem;
+  padding: 3px 0;
+}
+.wbx-kvRow > span:first-child {
+  color: var(--el-text-color-secondary, #6b7280);
+  flex: none;
+}
+.wbx-kvRow > span:last-child {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 列表 */
+.wbx-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+  padding: 0 2px;
+  font-size: 0.75rem;
+  color: var(--el-text-color-secondary, #6b7280);
+}
+.wbx-copied {
+  color: var(--el-color-success, #16a34a);
+}
+.wbx-list {
+  background: var(--el-fill-color-light, #f6f7f9);
+  border-radius: 10px;
+  margin-top: 8px;
+  padding: 6px;
+  max-height: 46vh;
+  overflow-y: auto;
+}
+.wbx-group {
+  padding: 6px 8px 3px;
+  font-size: 0.6875rem;
+  color: var(--el-text-color-secondary, #6b7280);
+  letter-spacing: 0.04em;
+}
+.wbx-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  font-size: 0.8125rem;
+  cursor: pointer;
+}
+.wbx-item:hover {
+  background: var(--el-fill-color, #eef0f3);
+}
+.wbx-itemName {
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wbx-chip {
+  flex: none;
+  background: var(--el-fill-color, #eef0f3);
+  color: var(--el-text-color-secondary, #6b7280);
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-size: 0.6875rem;
+  line-height: 1rem;
+  white-space: nowrap;
+}
+.wbx-itemMeta {
+  margin-left: auto;
+  flex: none;
+  font-size: 0.75rem;
+  color: var(--el-text-color-secondary, #6b7280);
+  font-variant-numeric: tabular-nums;
+  opacity: 0.8;
+  white-space: nowrap;
+}
+
+/* 媒体 */
+.wbx-media {
+  margin-top: 13px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--el-fill-color-light, #f6f7f9);
+}
+.wbx-img,
+.wbx-video {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 420px;
+  object-fit: contain;
+  background: var(--el-fill-color-light, #f6f7f9);
+}
+.wbx-mediaFallback {
+  padding: 28px 12px;
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--el-text-color-secondary, #6b7280);
+}
+
+/* 路径条 */
+.wbx-dest {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 11px;
+  padding: 8px 12px;
+  background: var(--el-fill-color-light, #f6f7f9);
+  border-radius: 9px;
+  font-size: 0.8125rem;
+}
+.wbx-dest code {
+  font-family: ui-monospace, Consolas, Menlo, monospace;
+  font-size: 0.75rem;
+  color: var(--el-text-color-regular, #4b5563);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 按钮 */
+.wbx-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 13px;
+}
+.wbx-btn {
+  border: 1px solid var(--el-border-color-lighter, #e5e7eb);
+  background: transparent;
+  color: var(--el-text-color-primary, #1f2937);
+  border-radius: 8px;
+  padding: 5px 13px;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+.wbx-btn:hover {
+  background: var(--el-fill-color-light, #f6f7f9);
+}
+.wbx-btn--primary {
+  background: var(--el-color-primary, #2f6bff);
+  border-color: var(--el-color-primary, #2f6bff);
+  color: #fff;
+}
+.wbx-btn--primary:hover {
+  background: var(--el-color-primary-light-3, #5b8bff);
+  border-color: var(--el-color-primary-light-3, #5b8bff);
+}
+.wbx-foot {
+  margin-left: auto;
+  font-size: 0.75rem;
+  color: var(--el-text-color-secondary, #6b7280);
+  font-variant-numeric: tabular-nums;
+}
+
+/* 进度条 */
+.wbx-bar {
+  margin-top: 14px;
+  height: 6px;
+  border-radius: 99px;
+  background: var(--el-fill-color-light, #f6f7f9);
+  overflow: hidden;
+}
+.wbx-bar > i {
+  display: block;
+  height: 100%;
+  width: 40%;
+  border-radius: 99px;
+  background: linear-gradient(90deg, #2f6bff, #7a4bff);
+  animation: wbx-slide 1.3s ease-in-out infinite;
+}
+@keyframes wbx-slide {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(260%);
+  }
+}
+
+/* 骨架 / 备注 */
+.wbx-skeleton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+  padding: 12px;
+  border-radius: 10px;
+  background: var(--el-fill-color-light, #f6f7f9);
+  font-size: 0.8125rem;
+  color: var(--el-text-color-secondary, #6b7280);
+}
+.wbx-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--el-color-primary, #2f6bff);
+  animation: wbx-pulse 1s ease-in-out infinite;
+}
+@keyframes wbx-pulse {
+  0%,
+  100% {
+    opacity: 0.25;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+.wbx-note {
+  margin: 9px 2px 0;
+  font-size: 0.75rem;
+  color: var(--el-text-color-secondary, #94a3b8);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}

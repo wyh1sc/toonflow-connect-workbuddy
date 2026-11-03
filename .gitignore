@@ -10,3 +10,5 @@ node_modules/
 Thumbs.db
 wb_health.json
 *.err
+client/build/node_modules/
+client/build/bun.lock

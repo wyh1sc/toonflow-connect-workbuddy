@@ -58,6 +58,7 @@ generateImage? / generateVideo? / generateAudio?
 .
 ├── install.py                      # 一键装完（凭据 → 代理 → 文本模型 → 插件 → 自启）
 ├── tool/workbuddyConnect.tool.js   # Toonflow tools 插件本体（v2 单文件自包含，含内置代理）
+├── client/                         # 工具卡片界面（Vue，build.py 嵌进 .tool.js 第 2 行）
 ├── proxy/wb_proxy.py               # 本机中转（OpenAI 兼容 + 媒体 + 账号池），Python 版
 ├── proxy/wb_creds.py               # 凭据自动发现（环境变量 / DSH / WorkBuddy 桌面端）
 ├── proxy/wb_crypto.py              # 纯标准库 AES-256-GCM，解桌面端的加密凭据
@@ -118,9 +119,9 @@ ELECTRON_RUN_AS_NODE=1 WorkBuddy.exe -e "process.stdout.write(process._linkedBin
 
 ### `tool/workbuddyConnect.tool.js`
 
-**v2 起是单文件自包含的**（8.7 万字符 / 2100 行）：模块顶层自动起 `Bun.serve`，内置凭据发现、AES-256-GCM 解密、账号池轮换、模型目录、文本对话聚合、生图、生视频异步任务。装进 Toonflow 后不需要任何外部进程。
+**v2 起是单文件自包含的**（约 11 万字符 / 2200 行）：模块顶层自动起 `Bun.serve`，内置凭据发现、AES-256-GCM 解密、账号池轮换、模型目录、文本对话聚合、生图、生视频异步任务。装进 Toonflow 后不需要任何外部进程。
 
-六个工具：
+六个工具，每个都带一张卡片界面（见下节）：
 
 | 工具 | 说明 |
 |---|---|
@@ -136,6 +137,35 @@ ELECTRON_RUN_AS_NODE=1 WorkBuddy.exe -e "process.stdout.write(process._linkedBin
 - `proxyUrl`，默认 `http://127.0.0.1:8289`（内置服务地址；端口被占时会自动顺延，实际值写进 `~/.toonflow-workbuddy/port.txt`）
 - `outputDir`，默认 `assets/generated`，必须是工作区内的相对路径
 - `autoStart`，默认开
+
+### 工具卡片界面（`client/`）
+
+六个工具每个都带一张 Vue 卡片，Agent 一调用就在对话里渲染出来——积分卡、模型清单、出图预览、视频进度全都在消息里直接看。
+
+```
+client/
+├── src/index.js    # 六个 Vue 组件（UMD，复用宿主的 vue / element-plus）
+├── src/index.css   # .wbx-* 类名，只用 --el-* 变量，跟随明暗主题
+├── build.py        # 打包：校验语法 → 算出 components 列表 → 写入 .tool.js 第 2 行
+├── build/          # bun 依赖（zod / vue 编译器），不进仓库
+└── dist/           # 参考用的 cjs bundle，实际发的是 src 原文
+```
+
+改界面：
+
+```bash
+# 改 client/src/index.js 或 index.css，然后
+python client/build.py            # 校验 + 重新嵌入 tool/workbuddyConnect.tool.js
+python client/build.py --check    # 只校验，不写文件
+python scripts/install_tool_plugin.py   # 装进 Toonflow（会自动 setEnabled）
+```
+
+Toonflow 的 components 有两条硬规矩，`build.py` 已经帮你守住了：
+
+- 客户端代码塞在 `.tool.js` **第 2 行**的 `/*! toonflowToolClient:{"code":"…","css":"…"} */` 里，用正则 `^\/\*! toonflowToolClient:([^\r\n]*) \*\/$` 整行匹配。**源码里出现任何 `*/`（块注释结束符）都会把这一行提前截断**，安装直接 400「工具客户端界面格式或脚本无效」——`build.py` 会把 js/css 里的块注释全部剥掉再嵌入。
+- 元数据 `components` 数组里的名字必须与服务端工具名一一对应，漏一个就报「工具声明了组件但缺少客户端界面」。`build.py` 从服务端源码里正则抠出 `name:` 列表与客户端导出名求交，不用手写。
+
+> ⚠️ **宿主会丢掉 `details`**。Toonflow 转发工具结果时只保留 `content[].text` 拼出来的字符串（`JT(A)` 这个函数就干了这一件事），`details` 完全不过去。所以卡片需要的数据以 `<!--wbx:{…}-->` 标记的形式追加在正文末尾，客户端 `parseCardText()` 再抠出来——正文照旧给人看，纯文本场景不受影响。
 
 ### `scripts/setup_text_provider.py`
 

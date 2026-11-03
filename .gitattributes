@@ -1,0 +1,6 @@
+# 插件文件必须是 LF：第 2 行 toonflowToolClient 的整行正则对行尾敏感
+*.tool.js text eol=lf
+*.js text eol=lf
+*.css text eol=lf
+*.py text eol=lf
+*.md text eol=lf

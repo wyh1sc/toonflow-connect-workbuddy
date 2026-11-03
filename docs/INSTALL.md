@@ -192,6 +192,8 @@ GLM-5.3                 0.69x  拥挤      1000K   订阅优先  glm-5.3
 
 内置服务默认端口 **8289**（与 Python 版 8189 错开）；被占时自动顺延 8290/8291，实际端口写进 `~/.toonflow-workbuddy/port.txt`。
 
+插件还自带六张卡片界面（积分 / 模型 / 出图 / 视频进度 / 状态 / 配置），Agent 一调用就在对话里渲染，不需要额外装东西。
+
 ### 图形界面
 
 Toonflow →「插件市场」→ 上传 `workbuddyConnect.tool.js`。
@@ -292,7 +294,7 @@ curl -s http://127.0.0.1:<port>/api/tools/get \
 
 > 调用 workbuddyMediaModels 工具，列出可用的图片模型和视频模型，每行一个。
 
-约 10 秒应该回：
+约 10 秒，回一段文字，**同时冒出一张「可用媒体模型」卡片**：
 
 ```
 hunyuan-image-alpha（text-to-image）
@@ -305,7 +307,43 @@ minimax-video-h3（text-to-video、image-to-video）4-15 秒 768P/2K
 
 > 画一张暖色调产品海报，存到 assets/posters
 
-约 15 秒出图，消耗 5.71 积分左右。
+约 15 秒出图，消耗 5.71 积分左右，卡片里直接显示生成的图片，底下是保存路径。
+
+六张卡分别长这样：
+
+| 工具 | 卡片 |
+|---|---|
+| `workbuddyCredits` | 大号积分数字 + 到期时间 + 账号池合计 |
+| `workbuddyMediaModels` | 四条模型，带能力标签，点一行复制模型 id |
+| `workbuddyDrawImage` | 图片预览 + 模型/尺寸/积分 + 保存路径 |
+| `workbuddyDrawVideo` | 进度条（已等 N 秒）+ 出片后视频可播 |
+| `workbuddyStatus` | 本地服务端口、当前账号、积分、账号数 |
+| `workbuddySetup` | 写入了几个模型、写到哪个供应商 |
+
+卡片只在**工具消息所在位置**渲染——问一句冒一张，不会固定在输入框旁边。
+
+如果只看到文字、没有卡片：`GET /api/tools/renderers` 里应该有 `workbuddyConnect`，没有就跑 `python scripts/install_tool_plugin.py`；有但是页面显示「该工具未提供可用的交互组件」，多半是浏览器缓存了旧的 `/api/tools/client` 响应，Ctrl+R。
+
+---
+
+## 五、改界面（可选）
+
+要改卡片样式或加字段，改 `client/src/` 再重新打包：
+
+```bash
+python client/build.py            # 校验 + 嵌回 tool/workbuddyConnect.tool.js
+python client/build.py --check    # 只校验
+python scripts/install_tool_plugin.py   # 重装（会自动 setEnabled）
+```
+
+`build.py` 干三件事：剥掉 js/css 里的块注释、用 `Bun.Transpiler.scan()` 验语法、把客户端代码压成 `.tool.js` 第 2 行的 `/*! toonflowToolClient:{…} */`。
+
+两个坑它是替你挡掉的：
+
+- **源码里不能有 `*/`**。第 2 行是整行匹配 `^\/\*! toonflowToolClient:([^\r\n]*) \*\/$`，任何块注释结束符都会把它提前截断，安装直接 400「工具客户端界面格式或脚本无效」。
+- **`components` 名字必须与服务端工具名一一对应**，漏一个报「工具声明了组件但缺少客户端界面」。`build.py` 自动求交，不用手写。
+
+还有一个宿主的取舍要知道：**`details` 会被丢掉**。Toonflow 转发工具结果时只保留 `content[].text` 拼出来的字符串（bun bundle 里那个 `JT(A)` 函数就干这一件事），结构化数据完全不过去。所以卡片数据是以 `<!--wbx:{…}-->` 标记追加在正文末尾的，客户端 `parseCardText()` 再抠出来——正文照旧给人看，纯文本场景不受影响。自己加工具时记得照这个套路走。
 
 ---
 
