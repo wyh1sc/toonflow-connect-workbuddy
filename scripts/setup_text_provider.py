@@ -47,41 +47,19 @@ def http_json(url, headers=None, body=None, method="GET", timeout=60):
         return json.loads(resp.read().decode("utf-8"))
 
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from tf_common import find_toonflow_port as _find_port  # noqa: E402
+
+
 def find_toonflow_port(explicit=None):
-    """按 desktopRuntime.json -> 常见端口 的顺序找 Toonflow 后端端口。"""
-    if explicit:
-        return int(explicit)
-
-    env = os.environ.get("TF_PORT")
-    if env:
-        return int(env)
-
-    candidates = []
-    for base in (
-        os.environ.get("TOONFLOW_HOME"),
-        os.path.join(os.environ.get("LOCALAPPDATA", ""), "toonflow"),
-        r"E:\local.toonflow.desktop\local.toonflow.desktop\stable",
-        os.path.expanduser("~/toonflow"),
-    ):
-        if base:
-            candidates.append(os.path.join(base, "app", "Resources", "desktopRuntime.json"))
-
-    for path in candidates:
-        if not os.path.isfile(path):
-            continue
-        try:
-            with open(path, encoding="utf-8") as fp:
-                port = json.load(fp).get("port")
-            if port:
-                log("Toonflow 端口 %s（来自 %s）" % (port, path))
-                return int(port)
-        except Exception as exc:  # noqa: BLE001
-            log("读取 %s 失败：%s" % (path, exc))
-
-    raise SystemExit(
-        "找不到 Toonflow 端口。请用 --port 指定，或设环境变量 TF_PORT。\n"
-        "端口在 <Toonflow 安装目录>/app/Resources/desktopRuntime.json 的 port 字段。"
-    )
+    """定位 Toonflow 后端端口（desktopRuntime.json / 卸载表 / bun 进程兜底）。"""
+    port = _find_port(explicit)
+    if not port:
+        raise SystemExit(
+            "找不到 Toonflow 端口。请用 --port 指定，或设环境变量 TF_PORT。\n"
+            "端口在 <Toonflow 安装目录>/app/Resources/desktopRuntime.json 的 port 字段。"
+        )
+    return port
 
 
 def tf_headers(port):

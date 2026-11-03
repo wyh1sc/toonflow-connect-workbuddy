@@ -39,16 +39,22 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
-# 账号凭据目录：默认取 dsh-connect-workbuddy 的 vault（$DSH_HOME/workbuddy-vault/<region>）
+# 账号凭据目录：自带一份（~/.toonflow-workbuddy/vault/<region>），启动时由
+# wb_creds 从「环境变量 / DSH 凭据库 / WorkBuddy 桌面端」自动发现并写进来。
+# 这样别人只要本机登录过 WorkBuddy 桌面端，装上就能用，不必先装 DSH 插件。
 # 可用环境变量 WB_VAULT_DIR / WB_REGION 覆盖。
 WB_REGION = os.environ.get("WB_REGION", "cn")
 VAULT_DIR = os.environ.get("WB_VAULT_DIR") or os.path.join(
-    os.environ.get("DSH_HOME") or os.path.join(os.path.expanduser("~"), ".dsh"),
-    "workbuddy-vault",
-    WB_REGION,
-)
+    os.path.expanduser("~"), ".toonflow-workbuddy", "vault", WB_REGION)
 
 POOL_STATE = os.environ.get("WB_POOL_STATE") or os.path.join(HERE, "wb_pool.json")
+
+# 凭据自动发现（可选模块）：拿不到就当没有，代理照常只读 vault。
+try:
+    sys.path.insert(0, HERE)
+    import wb_creds
+except Exception:  # noqa: BLE001
+    wb_creds = None
 
 UPSTREAM = "https://copilot.tencent.com"
 CN_BILLING_BASE = "https://www.codebuddy.cn"
@@ -1034,7 +1040,31 @@ class Handler(BaseHTTPRequestHandler):
         if path in ("/v1/media/balance", "/media/balance"):
             self._media_balance()
             return
+        if path in ("/pool/creds", "/pool/credentials"):
+            self._json(200, self._creds_status())
+            return
         self.send_error(404)
+
+    def _creds_status(self):
+        """凭据发现状态：vault 在哪、有几个账号、各来源是否可用。"""
+        out = {"ok": True, "vault": VAULT_DIR, "region": WB_REGION,
+               "accounts": len(POOL.accounts),
+               "sources": {}, "notes": []}
+        if wb_creds is None:
+            out["ok"] = False
+            out["notes"].append("wb_creds 模块没加载（凭据只能手放进 vault）")
+            return out
+        try:
+            if os.environ.get("WB_CREDS_SKIP_PROBE") == "1":
+                raise RuntimeError("skip")
+            creds, notes = wb_creds.discover(verbose=False)
+            out["discovered"] = len(creds)
+            out["notes"].extend(notes)
+            out["sources"] = {c.get("source", "").split(":")[0] for c in creds}
+            out["sources"] = sorted(s for s in out["sources"] if s)
+        except Exception as exc:  # noqa: BLE001
+            out["notes"].append("探测跳过：%s" % str(exc)[:120])
+        return out
 
     def _media_models(self):
         acc = POOL.active()
@@ -1240,6 +1270,19 @@ class Handler(BaseHTTPRequestHandler):
 
     def _pool_route(self, path):
         body = self._read_json()
+        if path in ("/pool/creds/sync", "/pool/credentials/sync"):
+            if wb_creds is None:
+                self._json(503, {"ok": False, "message": "wb_creds 模块没加载"})
+                return
+            try:
+                result = wb_creds.sync(VAULT_DIR)
+            except Exception as exc:  # noqa: BLE001
+                self._json(500, {"ok": False, "message": str(exc)[:200]})
+                return
+            POOL.scan()
+            result["accounts"] = len(POOL.accounts)
+            self._json(200, result)
+            return
         if path == "/pool/refresh":
             uid = body.get("uid") or ""
             for acc in list(POOL.accounts):
@@ -1464,6 +1507,28 @@ def test_account(acc):
         return False, str(exc)[:120]
 
 
+def bootstrap_credentials():
+    """启动时补凭据：vault 为空（或带了 FORCE）就跑一遍自动发现。
+
+    返回发现结果 dict；模块缺失时返回 None。
+    """
+    if wb_creds is None:
+        return None
+    force = os.environ.get("WB_CREDS_FORCE") == "1"
+    try:
+        have = POOL.scan()
+    except Exception:  # noqa: BLE001
+        have = []
+    if have and not force:
+        return {"skipped": True, "count": len(have)}
+    try:
+        result = wb_creds.sync(VAULT_DIR)
+    except Exception as exc:  # noqa: BLE001
+        return {"ok": False, "error": str(exc)[:200]}
+    POOL.scan()
+    return result
+
+
 def background_refresh():
     while True:
         try:
@@ -1475,6 +1540,14 @@ def background_refresh():
 
 def main():
     print("[wb-proxy] listening on http://%s:%d" % (LISTEN_HOST, LISTEN_PORT), flush=True)
+    print("[wb-proxy] vault: %s" % VAULT_DIR, flush=True)
+    boot = bootstrap_credentials()
+    if boot and not boot.get("skipped"):
+        print("[wb-proxy] credentials: %s" % json.dumps(
+            {k: boot.get(k) for k in ("ok", "count", "refreshed", "vault")},
+            ensure_ascii=False), flush=True)
+        for note in (boot.get("notes") or []):
+            print("[wb-proxy]   %s" % note, flush=True)
     print("[wb-proxy] pool: %d accounts" % len(POOL.accounts), flush=True)
     threading.Thread(target=background_refresh, daemon=True).start()
     srv = ThreadingHTTPServer((LISTEN_HOST, LISTEN_PORT), Handler)

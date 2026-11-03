@@ -35,12 +35,65 @@ generateImage? / generateVideo? / generateAudio?
 
 ```
 .
+├── install.py                      # 一键装完（凭据 → 代理 → 文本模型 → 插件 → 自启）
 ├── tool/workbuddyConnect.tool.js   # Toonflow tools 插件本体
 ├── proxy/wb_proxy.py               # 本机中转（OpenAI 兼容 + 媒体 + 账号池）
+├── proxy/wb_creds.py               # 凭据自动发现（环境变量 / DSH / WorkBuddy 桌面端）
+├── proxy/wb_crypto.py              # 纯标准库 AES-256-GCM，解桌面端的加密凭据
 ├── scripts/setup_text_provider.py  # 一键把代理里的文本模型写进 Toonflow 供应商
+├── scripts/install_tool_plugin.py  # 把 tools 插件装进 Toonflow
+├── scripts/tf_common.py            # Toonflow 端口定位与 HTTP 调用（公共）
 ├── scripts/model_rates.py          # 模型倍率 / 拥挤度对照表（终端 + HTML）
 └── docs/INSTALL.md                 # 安装与排障
 ```
+
+### `install.py`
+
+**装上就能用的关键。** 别人机器上不需要先装 DSH、不需要手动填 token、不需要 `cryptography`：
+
+```bash
+python install.py                  # 全装
+python install.py --check          # 只体检，不改任何东西
+python install.py --no-autostart   # 不写开机自启
+python install.py --uninstall      # 撤销自启（不删凭据）
+```
+
+五步，任何一步失败都会指出具体原因：
+
+1. **探测凭据** — 依次尝试环境变量 `CODEBUDDY_AUTH_TOKEN` → DSH 凭据库 → **WorkBuddy 桌面端认证文件**（后者只要本机登录过 WorkBuddy 就行）。
+2. **起代理** — `127.0.0.1:8189`，用 `/healthz` + `/pool/creds` 确认真的能取到账号。
+3. **写文本模型** — 调 `scripts/setup_text_provider.py`，把 `/v1/models` 灌进 `settings.customProviders`。
+4. **装工具插件** — 调 `scripts/install_tool_plugin.py`，走 `/api/tools/install`。
+5. **开机自启** — Windows 写 `HKCU\...\Run` 的 `ToonflowWorkBuddyProxy`；mac/Linux 只打印手动命令。
+
+### 凭据从哪来（别人装完为什么能直接用）
+
+`proxy/wb_creds.py` 按顺序找，找到就用：
+
+| 来源 | 条件 | 说明 |
+|---|---|---|
+| 环境变量 | 设了 `CODEBUDDY_AUTH_TOKEN` | 最省事，CI / 容器里用 |
+| DSH 凭据库 | `$DSH_HOME/workbuddy-vault/<region>/*.json` | 装了 dsh-connect-workbuddy 才有 |
+| **WorkBuddy 桌面端** | 本机登录过 WorkBuddy | **最常见**，字段是 AES-256-GCM 加密的 |
+
+第三条是重点：桌面端把 token 写在
+
+```
+%LOCALAPPDATA%\CodeBuddyExtension\Data\Public\auth\workbuddy-desktop.info
+%APPDATA%\CodeBuddyExtension\Data\Public\auth\workbuddy-desktop.info
+```
+
+字段形如 `{"$wbEncrypted":1,"envelope":"<base64>"}`。解封需要 at-rest 密钥，做法是拿 WorkBuddy 的 exe 跑一次：
+
+```
+ELECTRON_RUN_AS_NODE=1 WorkBuddy.exe -e "process.stdout.write(process._linkedBinding('electron_browser_workbuddy_storage').loggerGet())"
+```
+
+拿到 `atRestSecretKey` 后 `key = sha256(<这个 base64 字符串本身>)`，密钥 ID 是 `sha256(key).hex[:16]`，AAD 是 `WB-AAD\0` + 版本标签 + suite + keyId + 字段帧号。这条链子全在 `wb_crypto.py` 里用标准库实现了（AES-GCM 的 GHASH / CTR 手写），已和 `cryptography` 库逐字节对拍。
+
+**exe 怎么找**：`WORKBUDDY_APP_EXECUTABLE` 环境变量 → `%LOCALAPPDATA%` / `%ProgramFiles%` / `%ProgramFiles(x86)%` 下的常见目录 → **Windows 卸载表的 `DisplayIcon`**（装在 `E:\WorkBuddy\WorkBuddy\WorkBuddy.exe` 这种非标准路径也能找到）；macOS 走 `WorkBuddy.app/Contents/MacOS/<CFBundleExecutable>`。
+
+凭据会写进 `~/.toonflow-workbuddy/vault/<region>/<accountId>.json`，格式和 DSH 那份一致，后续代理直接读，不用每次重解。
 
 ### `tool/workbuddyConnect.tool.js`
 
@@ -118,12 +171,14 @@ POST /v1/videos/generations    # 生视频（默认阻塞到完成；带 wait:fa
 POST /v1/videos/tasks          # 按 taskId 查进度
 ```
 
-**账号池**
+**账号池 / 凭据**
 
 ```
 GET  /pool/accounts            # 所有账号 + 积分 + 签到 + 当前选中
 GET  /pool/catalog             # 上游 /v3/config 的模型目录（含倍率、拥挤度）
 GET  /pool/health              # 模型存活探测结果
+GET  /pool/creds               # 凭据从哪来的、发现几个、各来源是否可用
+POST /pool/creds/sync          # 重新发现凭据并写进 vault
 POST /pool/mode /pool/toggle /pool/checkin /pool/refresh /pool/test
 ```
 
@@ -132,24 +187,30 @@ POST /pool/mode /pool/toggle /pool/checkin /pool/refresh /pool/test
 ## 快速开始
 
 ```bash
-# 1. 起代理（需要先有 WorkBuddy 账号凭据，见 docs/INSTALL.md）
-python proxy/wb_proxy.py
-# [wb-proxy] listening on http://127.0.0.1:8189
-# [wb-proxy] pool: 6 accounts
-
-# 2. 自检
-curl http://127.0.0.1:8189/v1/media/balance
-curl http://127.0.0.1:8189/v1/media/models
+git clone https://github.com/wyh1sc/toonflow-connect-workbuddy
+cd toonflow-connect-workbuddy
+python install.py
 ```
 
+前提只有两个：**本机装过并登录过 WorkBuddy 桌面端**、**Toonflow 已经打开**。其余全自动。
+
+如果不想跑 `install.py`，手动版：
+
 ```bash
-# 3. 装 Toonflow 插件
-curl -X POST http://127.0.0.1:<toonflow-port>/api/tools/install \
-  -H "content-type: application/json" \
-  -H "x-toonflow-desktop: 1" \
-  -H "x-toonflow-workspace: 1" \
-  -H "origin: http://127.0.0.1:<toonflow-port>" \
-  -d "{\"fileName\":\"workbuddyConnect.tool.js\",\"source\":<文件内容>,\"force\":true}"
+# 1. 起代理（凭据会自动发现）
+python proxy/wb_proxy.py
+# [wb-proxy] listening on http://127.0.0.1:8189
+# [wb-proxy] vault: ~/.toonflow-workbuddy/vault/cn
+# [wb-proxy] credentials: {"ok": true, "count": 7, "refreshed": 6, ...}
+# [wb-proxy] pool: 7 accounts
+
+# 2. 自检
+curl http://127.0.0.1:8189/pool/creds
+curl http://127.0.0.1:8189/v1/media/balance
+
+# 3. 文本模型 + 工具插件
+python scripts/setup_text_provider.py
+python scripts/install_tool_plugin.py
 ```
 
 然后在 Toonflow 对话里直接说：
@@ -167,9 +228,14 @@ curl -X POST http://127.0.0.1:<toonflow-port>/api/tools/install \
 | 变量 | 默认 | 说明 |
 |---|---|---|
 | `WB_PROXY_PORT` | `8189` | 监听端口 |
-| `WB_VAULT_DIR` | `$DSH_HOME/workbuddy-vault/<region>` | 账号凭据目录 |
+| `WB_VAULT_DIR` | `~/.toonflow-workbuddy/vault/<region>` | 账号凭据目录 |
 | `WB_REGION` | `cn` | `cn` 或 `global` |
 | `WB_POOL_STATE` | `proxy/wb_pool.json` | 账号池状态文件 |
+| `CODEBUDDY_AUTH_TOKEN` | 空 | 直接给 token，跳过所有本地扫描 |
+| `WORKBUDDY_APP_EXECUTABLE` | 空 | 手动指定 WorkBuddy.exe（装在怪路径时用） |
+| `WB_CREDS_FORCE` | 空 | `1` = 每次启动都重新发现凭据 |
+| `WB_CREDS_SKIP_PROBE` | 空 | `1` = `/pool/creds` 只报缓存，不现场探测 |
+| `TF_PORT` | 空 | Toonflow 后端端口（自动发现失败时指定） |
 
 ---
 

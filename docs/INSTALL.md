@@ -8,17 +8,45 @@
 
 ---
 
-## 一、准备凭据
+## 前言：一条命令装完
 
-代理从 **dsh-connect-workbuddy 的 vault** 读账号，一个账号一个 JSON 文件：
-
+```bash
+git clone https://github.com/wyh1sc/toonflow-connect-workbuddy
+cd toonflow-connect-workbuddy
+python install.py
 ```
-$DSH_HOME/workbuddy-vault/<region>/<accountId>.json
-```
 
-`$DSH_HOME` 默认是 `~/.dsh`，`<region>` 是 `cn` 或 `global`。
+`install.py` 会依次做完：**探测凭据 → 起代理 → 写文本模型 → 装工具插件 → 注册开机自启**，每步都打印实际结果，失败直接指出原因。
 
-文件结构：
+前提只有两个：
+
+- 本机装过并**登录过 WorkBuddy 桌面端**（凭据就是从它那儿来的）
+- Toonflow 已经打开
+
+不想自动装就往下看手动步骤。
+
+---
+
+## 一、凭据从哪来
+
+**不需要手动填 token。** `proxy/wb_creds.py` 会自动找，顺序如下：
+
+| 顺序 | 来源 | 条件 |
+|---|---|---|
+| 1 | 环境变量 `CODEBUDDY_AUTH_TOKEN` | 手动给了就用，最省事 |
+| 2 | DSH 凭据库 `$DSH_HOME/workbuddy-vault/<region>/*.json` | 装了 dsh-connect-workbuddy |
+| 3 | **WorkBuddy 桌面端认证文件** | 本机登录过 WorkBuddy（最常见） |
+
+第三条的实现在 `wb_creds.py` + `wb_crypto.py`：
+
+1. 找 WorkBuddy 的 exe —— `WORKBUDDY_APP_EXECUTABLE` → `%LOCALAPPDATA%`/`%ProgramFiles%`/`%ProgramFiles(x86)%` 常见目录 → **Windows 卸载表的 `DisplayIcon`**（装在 `E:\WorkBuddy\WorkBuddy\WorkBuddy.exe` 这种怪路径也能找到）
+2. `ELECTRON_RUN_AS_NODE=1 <exe> -e "process.stdout.write(process._linkedBinding('electron_browser_workbuddy_storage').loggerGet())"` 取 `atRestSecretKey`
+3. `key = sha256(<base64 字符串本身>)`，`keyId = sha256(key).hex[:16]`
+4. 读 `%LOCALAPPDATA%\CodeBuddyExtension\Data\Public\auth\workbuddy-desktop.info`，把 `{"$wbEncrypted":1,"envelope":"…"}` 字段用 AES-256-GCM 解开
+
+第 4 步的 AES-GCM 是标准库手写的（`wb_crypto.py`，GHASH/CTR 全实现），**不需要装 `cryptography`**，已和官方库逐字节对拍。
+
+解出来的凭据写进 `~/.toonflow-workbuddy/vault/<region>/<accountId>.json`，格式：
 
 ```json
 {
@@ -32,15 +60,26 @@ $DSH_HOME/workbuddy-vault/<region>/<accountId>.json
     "refreshExpiresAt": 1800000000000,
     "domain": "www.codebuddy.cn"
   },
-  "account": { "uid": "…", "nickname": "…" }
+  "account": { "uid": "…", "nickname": "…" },
+  "source": "desktop:workbuddy-desktop.info"
 }
 ```
 
-只要 `auth.accessToken` 有效即可用。`accessToken` 是 RS256 JWT，`exp` 约 28 天。
+多账号就多几个文件，代理自动轮换。快过期的 token 会自动拿 `refreshToken` 续期。
 
-> 最省事的拿到这堆文件的方式：先装并登录 [dsh-connect-workbuddy](https://github.com/dingminhua/dsh-connect-workbuddy)，它会把 vault 写好。本仓库不包含任何获取凭据的代码。
+手动触发一次探测：
 
-多账号就多放几个文件，代理会自动轮换。
+```bash
+python proxy/wb_creds.py
+# {"ok": true, "count": 7, "refreshed": 6, "vault": "…", "accounts": [...]}
+```
+
+代理跑起来之后也可以 HTTP 触发：
+
+```bash
+curl http://127.0.0.1:8189/pool/creds          # 看凭据状态
+curl -X POST http://127.0.0.1:8189/pool/creds/sync   # 重新发现
+```
 
 ---
 
@@ -55,14 +94,24 @@ python wb_proxy.py
 
 ```
 [wb-proxy] listening on http://127.0.0.1:8189
-[wb-proxy] pool: 6 accounts
+[wb-proxy] vault: C:\Users\<你>\.toonflow-workbuddy\vault\cn
+[wb-proxy] credentials: {"ok": true, "count": 7, "refreshed": 6, "vault": "…"}
+[wb-proxy]   环境变量：未设置 CODEBUDDY_AUTH_TOKEN
+[wb-proxy]   DSH 凭据库：6 个账号
+[wb-proxy]   桌面端：1 个账号（密钥 ok）
+[wb-proxy] pool: 7 accounts
 ```
+
+第一次启动会自动跑一遍凭据发现；vault 已有账号时就跳过（`WB_CREDS_FORCE=1` 可强制重跑）。
 
 自检：
 
 ```bash
+curl http://127.0.0.1:8189/pool/creds
+# {"ok":true,"vault":"…","accounts":7,"sources":["desktop","dsh-vault"],"notes":[…]}
+
 curl http://127.0.0.1:8189/v1/media/balance
-# {"ok":true,"uid":"…","nickname":"…","region":"cn","credits":2436.63,"poolCredits":14240.44,"accounts":6}
+# {"ok":true,"uid":"…","nickname":"…","region":"cn","credits":2436.63,"poolCredits":14240.44,"accounts":7}
 
 curl http://127.0.0.1:8189/v1/media/models
 # {"ok":true,"total":58,"region":"cn","image":[…],"video":[…]}
@@ -147,6 +196,18 @@ Toonflow →「插件市场」→ 上传 `workbuddyConnect.tool.js`。
 
 ### HTTP
 
+**用脚本（推荐）**：
+
+```bash
+python scripts/install_tool_plugin.py           # 装 / 覆盖装，自动找端口
+python scripts/install_tool_plugin.py --list    # 看装没装、有没有 loadError
+python scripts/install_tool_plugin.py --disable # 关掉
+```
+
+端口自动发现顺序：`--port` → `TF_PORT` → 安装目录 `app/Resources/desktopRuntime.json`（目录本身按 `TOONFLOW_HOME`、Windows 卸载表、常见路径找）→ **正在运行的 bun.exe 监听的端口**。每一步都会真的发一次请求确认是 Toonflow，不会拿错端口。
+
+**手写请求**：
+
 先取后端端口：
 
 ```python
@@ -224,9 +285,52 @@ minimax-video-h3（text-to-video、image-to-video）4-15 秒 768P/2K
 
 ## 排障
 
+### 代理起来但 `pool: 0 accounts`
+
+凭据一个都没找到。跑这个看卡在哪一步：
+
+```bash
+python proxy/wb_creds.py
+```
+
+三条来源逐条看：
+
+- **环境变量**：`echo %CODEBUDDY_AUTH_TOKEN%` 是不是空的
+- **DSH 凭据库**：`%USERPROFILE%\.dsh\workbuddy-vault\cn\` 下有没有 `*.json`
+- **桌面端**：日志里那句「桌面端：N 个账号（密钥 ok / 密钥取不到）」
+
+「密钥取不到」通常是 exe 找不到：
+
+```bash
+python -c "import sys;sys.path.insert(0,r'proxy');import wb_creds as c;print(c.find_app_executable())"
+```
+
+返回 `None` 就手动指定：
+
+```powershell
+$env:WORKBUDDY_APP_EXECUTABLE = "E:\WorkBuddy\WorkBuddy\WorkBuddy.exe"
+```
+
+或者直接给 token，绕开本地扫描：
+
+```powershell
+$env:CODEBUDDY_AUTH_TOKEN = "<浏览器里 F12 抄的 accessToken>"
+```
+
+桌面端**只是打开没登录**也会没有凭据文件 —— 先在 WorkBuddy 里登录一次。
+
+### `/pool/creds` 返回 404
+
+跑的是旧版 `wb_proxy.py`。杀掉所有 `wb_proxy.py` 进程再起（Python 不热重载）。Windows 上常常有多个残留进程抢 8189，实际只有一个在 LISTEN：
+
+```powershell
+Get-CimInstance Win32_Process -Filter "Name='python.exe' or Name='pythonw.exe'" |
+  Where-Object CommandLine -match 'wb_proxy' | ForEach-Object { Stop-Process -Id $_.ProcessId -Force }
+```
+
 ### 工具不出现
 
-`GET /api/tools/get` 里没看到 `workbuddyConnect` → 安装没成功，看返回的 `message`。
+`python scripts/install_tool_plugin.py --list` 里没看到 `workbuddyConnect` → 安装没成功，看返回的 `message`。
 
 ### 工具在但 Agent 不调用
 
