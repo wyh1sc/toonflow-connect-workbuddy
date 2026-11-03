@@ -41,7 +41,9 @@ sys.path.insert(0, PROXY_DIR)
 PROXY_PORT = int(os.environ.get("WB_PROXY_PORT", "8189"))
 PROXY_URL = "http://127.0.0.1:%d" % PROXY_PORT
 RUN_KEY = r"Software\Microsoft\Windows\CurrentVersion\Run"
-RUN_NAME = "ToonflowWorkBuddyProxy"
+# 注意：值名里别带 "WorkBuddy" 全词。联想电脑管家之类的 OEM 启动项管理器
+# 会把不认识的 WorkBuddy 相关值当成第三方写入，3 秒内搬进 Run\LenovoDisabled。
+RUN_NAME = "ToonflowWbProxy"
 
 
 def log(msg):
@@ -230,11 +232,36 @@ def step_autostart(enable=True):
                     ok("本来就没有自启项")
         finally:
             winreg.CloseKey(key)
+        if enable:
+            _verify_autostart()
         return True
     # macOS / Linux：给出手动命令，别乱写用户的启动项
     warn("非 Windows，未自动注册。可把下面这行加进自启：")
     log("         %s %s &" % (sys.executable, PROXY))
     return True
+
+
+def _verify_autostart():
+    """写完之后确认值还在。某些 OEM 启动项管理器会秒删/搬走第三方写入。"""
+    import time
+    import winreg
+
+    time.sleep(2)
+    try:
+        key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, RUN_KEY)
+    except OSError:
+        return
+    try:
+        winreg.QueryValueEx(key, RUN_NAME)
+        return
+    except OSError:
+        pass
+    finally:
+        winreg.CloseKey(key)
+
+    warn("自启项刚写就被系统搬走了（常见于联想电脑管家之类的启动项管理）。")
+    warn("已改用不冲突的值名；若仍被搬走，请把下面这行手动加进「启动」文件夹：")
+    log("         %s" % autostart_command())
 
 
 # ---------------------------------------------------------------- 体检
