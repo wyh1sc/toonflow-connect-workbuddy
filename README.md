@@ -26,8 +26,29 @@ generateImage? / generateVideo? / generateAudio?
 
 所以：
 
-- **文本模型**（截图里那些 `Deepseek-V4.1-Flash · 0.11x`）→ 在「设置 → 模型供应商」里配 OpenAI 兼容端点，本仓库的 `proxy/wb_proxy.py` 就提供这个端点。
+- **文本模型**（截图里那些 `Deepseek-V4.1-Flash · 0.11x`）→ 在「设置 → 模型供应商」里配 OpenAI 兼容端点。
 - **画图 / 生视频**（本插件）→ 做成 `tools` 插件，让 Agent 在对话里按需调用。
+
+---
+
+## 两种用法，选一个
+
+| 方式 | 需要什么 | 适合 |
+|---|---|---|
+| **单文件插件**（推荐给插件市场用户） | 只装 `tool/workbuddyConnect.tool.js` 一个文件 | 从 Toonflow 插件市场下载的人，无需 Python |
+| 完整仓库（`install.py`） | Python + 本仓库 | 想自己掌控代理、要开机自启、要账号池运维 |
+
+**单文件版是自包含的**：插件模块在被 import 的那一刻（模块顶层）就自己起一个 `Bun.serve`，内置了完整的代理逻辑——凭据发现、AES 解密、账号池、`/v3/config` 目录、`/v1/chat/completions`、生图、生视频异步轮询，全在一个 `.js` 里，不依赖本仓库的任何 Python 文件。
+
+装完之后：
+
+1. 在对话里说「用 workbuddySetup 配置一下」——它会发现凭据、起本地服务、把 48 个文本模型写进「设置 → 模型供应商」。
+2. 到模型下拉里选 WorkBuddy 的模型，开始对话。
+3. 要画图/出视频时，Agent 会自动调 `workbuddyDrawImage` / `workbuddyDrawVideo`。
+
+单文件版默认端口 **8289**（与完整仓库的 Python 代理 8189 错开，两者可以并存）。
+
+> ⚠️ 一个必须知道的平台行为：`POST /api/tools/install` **只会把文件落盘，不会执行模块**。插件的 `Bun.serve` 要等到 Toonflow 真的 `import()` 这个模块才会起——也就是第一次被使用、或调一次 `PUT /api/tools/setEnabled`。本仓库的 `scripts/install_tool_plugin.py` 已经自动补了这一步。
 
 ---
 
@@ -36,8 +57,8 @@ generateImage? / generateVideo? / generateAudio?
 ```
 .
 ├── install.py                      # 一键装完（凭据 → 代理 → 文本模型 → 插件 → 自启）
-├── tool/workbuddyConnect.tool.js   # Toonflow tools 插件本体
-├── proxy/wb_proxy.py               # 本机中转（OpenAI 兼容 + 媒体 + 账号池）
+├── tool/workbuddyConnect.tool.js   # Toonflow tools 插件本体（v2 单文件自包含，含内置代理）
+├── proxy/wb_proxy.py               # 本机中转（OpenAI 兼容 + 媒体 + 账号池），Python 版
 ├── proxy/wb_creds.py               # 凭据自动发现（环境变量 / DSH / WorkBuddy 桌面端）
 ├── proxy/wb_crypto.py              # 纯标准库 AES-256-GCM，解桌面端的加密凭据
 ├── scripts/setup_text_provider.py  # 一键把代理里的文本模型写进 Toonflow 供应商
@@ -63,7 +84,7 @@ python install.py --uninstall      # 撤销自启（不删凭据）
 1. **探测凭据** — 依次尝试环境变量 `CODEBUDDY_AUTH_TOKEN` → DSH 凭据库 → **WorkBuddy 桌面端认证文件**（后者只要本机登录过 WorkBuddy 就行）。
 2. **起代理** — `127.0.0.1:8189`，用 `/healthz` + `/pool/creds` 确认真的能取到账号。
 3. **写文本模型** — 调 `scripts/setup_text_provider.py`，把 `/v1/models` 灌进 `settings.customProviders`。
-4. **装工具插件** — 调 `scripts/install_tool_plugin.py`，走 `/api/tools/install`。
+4. **装工具插件** — 调 `scripts/install_tool_plugin.py`，走 `/api/tools/install`，再自动 `PUT /api/tools/setEnabled` 把插件模块跑起来。
 5. **开机自启** — Windows 写 `HKCU\...\Run` 的 `ToonflowWorkBuddyProxy`；mac/Linux 只打印手动命令。
 
 ### 凭据从哪来（别人装完为什么能直接用）
@@ -97,10 +118,14 @@ ELECTRON_RUN_AS_NODE=1 WorkBuddy.exe -e "process.stdout.write(process._linkedBin
 
 ### `tool/workbuddyConnect.tool.js`
 
-四个工具：
+**v2 起是单文件自包含的**（8.7 万字符 / 2100 行）：模块顶层自动起 `Bun.serve`，内置凭据发现、AES-256-GCM 解密、账号池轮换、模型目录、文本对话聚合、生图、生视频异步任务。装进 Toonflow 后不需要任何外部进程。
+
+六个工具：
 
 | 工具 | 说明 |
 |---|---|
+| `workbuddySetup` | 一次性配置：发现凭据 → 起服务 → 把文本模型写进 Toonflow 供应商 |
+| `workbuddyStatus` | 本地服务端口、账号数、凭据来源 |
 | `workbuddyDrawImage` | 文生图 / 图生图，同步返回，几十秒 |
 | `workbuddyDrawVideo` | 文生视频 / 图生视频，异步任务自动轮询到完成 |
 | `workbuddyCredits` | 当前账号剩余积分、到期时间、账号池合计 |
@@ -108,8 +133,9 @@ ELECTRON_RUN_AS_NODE=1 WorkBuddy.exe -e "process.stdout.write(process._linkedBin
 
 配置项（安装后在插件市场里点「配置」）：
 
-- `proxyUrl`，默认 `http://127.0.0.1:8189`
+- `proxyUrl`，默认 `http://127.0.0.1:8289`（内置服务地址；端口被占时会自动顺延，实际值写进 `~/.toonflow-workbuddy/port.txt`）
 - `outputDir`，默认 `assets/generated`，必须是工作区内的相对路径
+- `autoStart`，默认开
 
 ### `scripts/setup_text_provider.py`
 

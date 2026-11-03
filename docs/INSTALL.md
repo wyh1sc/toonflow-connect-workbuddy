@@ -188,11 +188,15 @@ GLM-5.3                 0.69x  拥挤      1000K   订阅优先  glm-5.3
 
 ## 三、装 Toonflow 插件
 
-`tool/workbuddyConnect.tool.js` 单文件，两种装法。
+`tool/workbuddyConnect.tool.js` 是**单文件自包含**的：插件模块在被 import 的那一刻（模块顶层）就自起一个 `Bun.serve`，内置凭据发现、AES 解密、账号池、模型目录、文本对话、生图、生视频。**不需要先跑 `proxy/wb_proxy.py`**，也不依赖本仓库任何 Python 文件——从插件市场下载的人只拿到这一个 `.js` 也能用。
+
+内置服务默认端口 **8289**（与 Python 版 8189 错开）；被占时自动顺延 8290/8291，实际端口写进 `~/.toonflow-workbuddy/port.txt`。
 
 ### 图形界面
 
 Toonflow →「插件市场」→ 上传 `workbuddyConnect.tool.js`。
+
+装完在对话里说一句「用 workbuddySetup 配置一下」——它会发现凭据、起服务、把那 48 个对话模型写进「设置 → 模型供应商」。
 
 ### HTTP
 
@@ -205,6 +209,28 @@ python scripts/install_tool_plugin.py --disable # 关掉
 ```
 
 端口自动发现顺序：`--port` → `TF_PORT` → 安装目录 `app/Resources/desktopRuntime.json`（目录本身按 `TOONFLOW_HOME`、Windows 卸载表、常见路径找）→ **正在运行的 bun.exe 监听的端口**。每一步都会真的发一次请求确认是 Toonflow，不会拿错端口。
+
+> ⚠️ **平台行为，必须知道**：`POST /api/tools/install` 只把文件落盘，**不会执行模块**。插件的 `Bun.serve` 要等 Toonflow 真的 `import()` 才会起，而触发 import 的只有 `PUT /api/tools/setEnabled`（或第一次被 Agent 使用）。
+>
+> 所以脚本在 install 之后自动补了一步 `PUT /api/tools/setEnabled`，并等 `~/toonflow-workbuddy/port.txt` 里那个端口 `/healthz` 返回 200 才收工：
+>
+> ```
+> Toonflow 端口 54149（来自 …\app\Resources\desktopRuntime.json）
+> install -> HTTP 200 {"code": 200, "data": {"name": "workbuddyConnect"}, "message": "工具已安装"}
+> setEnabled(True) -> HTTP 200 {"code": 200, "data": {"name": "workbuddyConnect", "enabled": true}, "message": "成功"}
+> 内置服务已就绪：http://127.0.0.1:8289  {"ok":true,"pool":12,"port":8289}
+> ```
+>
+> 手动装的话，install 之后必须再发一次：
+>
+> ```python
+> req = urllib.request.Request(
+>     f"http://127.0.0.1:{port}/api/tools/setEnabled",
+>     data=json.dumps({"name": "workbuddyConnect", "enabled": True}).encode(),
+>     headers={...同上三个头...}, method="PUT")
+> ```
+>
+> 注意是 **PUT**，POST 会 404。
 
 **手写请求**：
 
@@ -331,6 +357,22 @@ Get-CimInstance Win32_Process -Filter "Name='python.exe' or Name='pythonw.exe'" 
 ### 工具不出现
 
 `python scripts/install_tool_plugin.py --list` 里没看到 `workbuddyConnect` → 安装没成功，看返回的 `message`。
+
+### 工具已装但内置服务没起来（8289 连不上）
+
+这是最容易踩的一个坑：**`install` 只落文件不执行模块**。判定与修复：
+
+```powershell
+# 端口没监听
+netstat -ano | Select-String 'LISTENING' | Select-String ':8289'
+
+# port.txt 时间戳是不是刚才
+Get-Item "$env:USERPROFILE\.toonflow-workbuddy\port.txt" | Select-Object LastWriteTime
+```
+
+修复：`python scripts/install_tool_plugin.py --enable`（内部就是 `PUT /api/tools/setEnabled`），然后看 `~/toonflow-workbuddy/port.txt` 是否被刷新、`curl http://127.0.0.1:8289/healthz` 是否返回 `{"ok":true,...}`。
+
+理论上第一次被 Agent 调用时也会 import，但那时服务还没起 → 工具里连自己的服务会 ECONNREFUSED，所以装完就 setEnabled 一次最稳。
 
 ### 开机自启没生效
 

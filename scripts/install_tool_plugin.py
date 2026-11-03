@@ -19,6 +19,7 @@ import argparse
 import json
 import os
 import sys
+import time
 import urllib.error
 import urllib.request
 
@@ -62,6 +63,32 @@ def show_list(port):
     return 0
 
 
+def set_enabled(port, enabled):
+    """Toonflow 的开关路由是 PUT /api/tools/setEnabled，而且只有它会
+    真正 import() 插件模块 —— 也就是只有它能让插件模块顶层的 Bun.serve 起来。
+    所以安装完必须再调一次（见 force_load 说明）。"""
+    status, resp = call(port, "PUT", "/api/tools/setEnabled",
+                        {"name": TOOL_NAME, "enabled": bool(enabled)}, timeout=180)
+    body = json.dumps(resp, ensure_ascii=False) if isinstance(resp, dict) else str(resp)
+    log("setEnabled(%s) -> HTTP %s %s" % (bool(enabled), status, body[:300]))
+    return status == 200
+
+
+def wait_listening(port, seconds=20):
+    """等插件内置服务真的起来（模块顶层 Bun.serve）。"""
+    deadline = time.time() + seconds
+    url = "http://127.0.0.1:%d/healthz" % port
+    while time.time() < deadline:
+        try:
+            with urllib.request.urlopen(url, timeout=2) as resp:
+                if resp.status == 200:
+                    return resp.read().decode("utf-8", "ignore")[:200]
+        except Exception:  # noqa: BLE001
+            pass
+        time.sleep(0.5)
+    return ""
+
+
 def main():
     ap = argparse.ArgumentParser(description="安装 WorkBuddy 连接工具插件")
     ap.add_argument("--port", type=int, default=None, help="Toonflow 后端端口")
@@ -80,14 +107,11 @@ def main():
         return show_list(port)
 
     if args.enable or args.disable:
-        status, resp = call(port, "POST", "/api/tools/setEnabled",
-                            {"name": TOOL_NAME, "enabled": bool(args.enable)})
-        log("setEnabled -> HTTP %s %s" % (status, json.dumps(resp, ensure_ascii=False)[:300]
-                                          if isinstance(resp, dict) else str(resp)[:300]))
-        return 0 if status == 200 else 1
+        return 0 if set_enabled(port, args.enable) else 1
 
     if args.uninstall:
-        status, resp = call(port, "POST", "/api/tools/uninstall", {"name": TOOL_NAME})
+        status, resp = call(port, "DELETE", "/api/tools/uninstall", {"name": TOOL_NAME},
+                            timeout=120)
         log("uninstall -> HTTP %s %s" % (status, json.dumps(resp, ensure_ascii=False)[:300]
                                          if isinstance(resp, dict) else str(resp)[:300]))
         return 0 if status == 200 else 1
@@ -117,6 +141,24 @@ def main():
     log("install -> HTTP %s %s" % (status, body[:400]))
     if status != 200:
         return 1
+
+    # 关键：install 只落文件、不执行模块。必须再 setEnabled 一次，
+    # 插件的模块顶层才会跑起来（内置 Bun.serve 才会监听）。
+    set_enabled(port, True)
+    plugin_port = 0
+    try:
+        with open(os.path.join(os.path.expanduser("~"), ".toonflow-workbuddy", "port.txt"),
+                  "r", encoding="utf-8") as fp:
+            plugin_port = int((fp.read() or "0").strip() or 0)
+    except Exception:  # noqa: BLE001
+        plugin_port = 0
+    info = wait_listening(plugin_port) if plugin_port else ""
+    if info:
+        log("内置服务已就绪：http://127.0.0.1:%d  %s" % (plugin_port, info))
+    elif plugin_port:
+        log("内置服务还没起来（端口 %d 未监听）。在 Toonflow 里随便发一句话，"
+            "或再执行一次 --enable。" % plugin_port)
+
     log("")
     show_list(port)
     return 0
