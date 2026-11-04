@@ -84,13 +84,46 @@ def fetch_proxy_models(proxy):
     return rows
 
 
+EFFORT_KEYS = ("off", "minimal", "low", "medium", "high", "xhigh", "max")
+
+
+def to_efforts(raw):
+    """reasoningEfforts → {档位id: 接口值} 或 False。
+
+    代理 /v1/models 的 reasoningEfforts 出现过三种形态：
+    ["low","high"] / [{"id":"low","label":"low"}] / {"low":"low"}。
+    Toonflow 的 schema 是 partialRecord(enum(off|minimal|low|medium|high|xhigh|max), string)，
+    所以这里统一成 {档位id: 接口值}，并剔除白名单外的键，空则返回 False。
+    """
+    if raw is False or raw is None:
+        return False
+    if isinstance(raw, dict):
+        pairs = list(raw.items())
+    elif isinstance(raw, list):
+        pairs = []
+        for item in raw:
+            if isinstance(item, dict):
+                key = item.get("id") or item.get("value") or item.get("key") or item.get("label")
+                if key:
+                    pairs.append((key, item.get("value") or item.get("api") or str(key)))
+            elif item:
+                pairs.append((item, item))
+    else:
+        return False
+
+    efforts = {}
+    for key, value in pairs:
+        k = str(key).strip()
+        if k not in EFFORT_KEYS:
+            continue
+        v = str(value).strip() if value is not None else k
+        efforts[k] = v or k
+    return efforts or False
+
+
 def to_toonflow_model(row):
     """把代理的 OpenAI 模型条目映射成 Toonflow customProviders[].models[] 的形状。"""
-    eff = row.get("reasoningEfforts")
-    if isinstance(eff, list) and eff:
-        efforts = {str(e): str(e) for e in eff}
-    else:
-        efforts = False
+    efforts = to_efforts(row.get("reasoningEfforts"))
 
     model = {
         "id": row["id"],
