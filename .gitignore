@@ -13,3 +13,4 @@ wb_health.json
 client/build/node_modules/
 client/build/bun.lock
 _msg.txt
+_r.py
