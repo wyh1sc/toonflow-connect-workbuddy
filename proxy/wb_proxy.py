@@ -14,7 +14,7 @@ workbuddy -> OpenAI 兼容代理（给 Toonflow 用） + 账号池
   3. 吐标准 SSE 回去（上游本身就是 OpenAI SSE，直接透传）
   4. GET /v1/models 用当前账号拉模型目录映射成 OpenAI 列表格式
   5. 每个账号的剩余积分 / 签到状态查询
-  6. 失败自动换号（只对「换号有意义」的错误换：401/403、积分耗尽 14018、账号受限 11140）
+  6. 失败自动换号（只对「换号有意义」的错误换：401 凭据失效 / 402 无积分 / 429 限流 / 5xx 网关；403 策略拒绝与 400 不换）
 
 账号池接口：
   GET  /pool/accounts           -> 所有账号 + 积分 + 签到 + 当前选中
@@ -101,8 +101,12 @@ IDENTITY_CLAUSE = re.compile(
 )
 
 # 换号「有意义」的错误码：账号维度的问题
-FAILOVER_CODES = {14018, 11140}     # 14018 积分耗尽 / 11140 账号受限
-FAILOVER_HTTP = {401, 403}
+FAILOVER_CODES = {14018}            # 14018 积分耗尽
+# 换号矩阵（对齐上游实测结论）：
+#   换 = 401 凭据失效 / 402 无积分 / 429 限流 / 5xx 网关
+#   不换 = 403（11140 是策略拒绝 request illegal，换谁都拒）/ 400（请求本身不合法）
+FAILOVER_HTTP = {401, 402, 429, 502, 503, 504}
+POLICY_REJECT_CODES = {11140}
 
 
 # ============================== 账号池 ==============================
@@ -963,6 +967,9 @@ def failover_reason(status, body):
     except Exception:  # noqa: BLE001
         j = {}
     code = j.get("code")
+    # 11140 = 策略拒绝（request illegal），换号也一样被拒，重试只会白烧额度。
+    if isinstance(code, int) and code in POLICY_REJECT_CODES:
+        return False, ""
     if isinstance(code, int) and code in FAILOVER_CODES:
         return True, "code %d" % code
     if status in FAILOVER_HTTP:

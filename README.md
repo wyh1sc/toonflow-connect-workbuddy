@@ -119,7 +119,7 @@ ELECTRON_RUN_AS_NODE=1 WorkBuddy.exe -e "process.stdout.write(process._linkedBin
 
 ### `tool/workbuddyConnect.tool.js`
 
-**v2 起是单文件自包含的**（11.0 万字符 / 2186 行）：模块顶层自动起 `Bun.serve`，内置凭据发现、AES-256-GCM 解密、账号池轮换、模型目录、文本对话聚合、生图、生视频异步任务。装进 Toonflow 后不需要任何外部进程。
+**v2 起是单文件自包含的**（13.0 万字节 / 2471 行）：模块顶层自动起 `Bun.serve`，内置凭据发现、AES-256-GCM 解密、账号池轮换、模型目录、文本对话聚合、生图、生视频异步任务。装进 Toonflow 后不需要任何外部进程。
 
 六个工具，每个都带一张卡片界面（见下节）：
 
@@ -137,6 +137,38 @@ ELECTRON_RUN_AS_NODE=1 WorkBuddy.exe -e "process.stdout.write(process._linkedBin
 - `proxyUrl`，默认 `http://127.0.0.1:8289`（内置服务地址；端口被占时会自动顺延，实际值写进 `~/.toonflow-workbuddy/port.txt`）
 - `outputDir`，默认 `assets/generated`，必须是工作区内的相对路径
 - `autoStart`，默认开
+
+### 账号池：挑号、换号、签到、测试（v2.2 起）
+
+内置服务在 `/v1/*` 之外还暴露一组 `/pool/*` 接口，网页里的账号池面板就是打这些：
+
+| 接口 | 作用 |
+|---|---|
+| `GET /pool/accounts` | 账号列表：昵称、掩码 uin、积分、到期日、冷却、**签到状态**、连签天数 |
+| `GET /pool/catalog` | 完整模型目录（倍率 / 拥挤度 / 上下文 / 推理档） |
+| `GET /pool/health` | 模型可用性标签 |
+| `POST /pool/mode` | `{mode:"auto"\|"fixed"\|"off", fixedUid}` |
+| `POST /pool/toggle` | `{uid, enabled}`（幂等，按传入值设置） |
+| `POST /pool/refresh` | 强制重拉所有账号积分 |
+| `POST /pool/checkin` | 签到，`{uid}` 单个或 `{}` 全部；**幂等**，已签到的直接标「已签到」，不发写入请求 |
+| `POST /pool/test` | **体积探测**：真发一次 25k token 请求，能探出限流（约 0.02 积分） |
+
+三条关键行为，都是照上游实测结论定的：
+
+**① 挑号是五键全序**（`POOL.rank()`）：可用（不在冷却）优先 → 积分高（只用 10 分钟内的新鲜读数，挑号路径不打上游）→ 3 天内到期的积分包优先 → 凭据更晚过期优先 → uid 收尾保证可复现。固定账号模式下直接命中 `fixedUid`。
+
+**② 换号矩阵**（`failKind()` + `RETRYABLE_KINDS`）：
+
+| 会换 | 不换 |
+|---|---|
+| `401` 凭据失效 | `403` / code `11140` —— 策略拒绝（`request illegal`），换谁都拒，重试只会白烧额度 |
+| `402` / code `14018` 积分耗尽 | `400` —— 请求本身不合法，换谁都 400 |
+| `429` / code `6004` 限流 | 流中途断开 —— 字节已发出，重放会把两段回答拼在一起 |
+| `5xx` 网关 | |
+
+**③ 限流按请求体积触发，重置时间藏在响应体里**。上游 429 不带 `Retry-After`，而是回 `{"code":6004,"msg":"…将在 2026-09-30 02:30:30 UTC+8 重置…"}`。`parseResetAt()` 按声明里的 UTC 偏移换算成冷却时长；解析不出来就 30 分钟兜底。这也是「测试」必须发真实体积的原因——ping 一个 `max_tokens:1` 根本探不出限流。
+
+> 模型下拉上的「· 暂不可用 / · 异常」标签走的是**另一条轻量探测**（`probeOne`，1 token），不会花额度。
 
 ### 用户不用记工具名
 

@@ -1,4 +1,4 @@
-/*! toonflowTool:{"name":"workbuddyConnect","version":"2.1.5","displayName":"WorkBuddy 连接","description":"单文件自带代理：自动读取本机 WorkBuddy 桌面端凭据，起一个本地 OpenAI 兼容服务（对话模型 + 生图 + 生视频 + 积分 + 模型目录）。装完调用 workbuddySetup 即可把文本模型写进 Toonflow 供应商。","prompt":"WorkBuddy 连接插件（本机 WorkBuddy 账号池）。用户通常不知道工具名，根据意图自己选，不要要求用户说工具名。涉及积分/额度/余额时用 workbuddyCredits；问「有哪些模型 / 能画什么图 / 能生什么视频 / 支持多长多清晰」时，先调 workbuddyMediaModels 列出本插件支持的模型再回答——即使项目里还有其它供应商，也必须把 WorkBuddy 这一份列出来，不要凭印象跳过；要画图、改图、生成图片时用 workbuddyDrawImage（同步，几十秒）；要生成视频、图生视频时用 workbuddyDrawVideo（异步，先告知大概等待时长，进度会自动显示）；状态、端口、连不上、没反应、报错时用 workbuddyStatus；首次使用、提示没有可用账号、模型列表为空时用 workbuddySetup 自动配置。花积分前先用 workbuddyCredits 报额度。模型 id 必须取自 workbuddyMediaModels 的真实结果，不要编。生成结果保存在工作区，回复里给相对路径。用户明确要求在画布节点里生成时才不用本插件。","readme":"# WorkBuddy 连接\n\n单文件插件，自带本地代理：自动发现本机 WorkBuddy 桌面端凭据 → 起本地 OpenAI 兼容服务 → 给 Toonflow 提供对话模型、生图、生视频。\n\n## 装完三步\n\n1. 确认本机装了并登录过 WorkBuddy 桌面端（凭据自动读取，无需手动填 token）。\n2. 在对话里说一句「用 workbuddySetup 配置一下」。\n3. 到「设置 → 模型供应商」选 WorkBuddy 的任一模型即可对话。\n\n## 工具\n\n- `workbuddySetup`：自动写文本模型供应商到 Toonflow 设置（一次性）\n- `workbuddyStatus`：看本地服务端口、账号数、凭据来源\n- `workbuddyDrawImage`：文生图 / 图生图\n- `workbuddyDrawVideo`：文生视频 / 图生视频（异步自动轮询）\n- `workbuddyCredits`：剩余积分与账号池合计\n- `workbuddyMediaModels`：可用的图片与视频模型\n\n## 说明\n\n- 本地服务只监听 127.0.0.1，端口默认 8289（与 python 版 8189 错开），实际端口写进 `~/.toonflow-workbuddy/port.txt`。\n- 凭据来源优先级：环境变量 `CODEBUDDY_AUTH_TOKEN` → 本插件凭据库 → DSH 凭据库 → WorkBuddy 桌面端认证文件（AES-256-GCM 解密）。\n- 桌面端 exe 定位：环境变量 `WORKBUDDY_APP_EXECUTABLE` → 常见安装路径 → Windows 注册表 DisplayIcon。\n\n## 界面\n\n结果会以卡片形式出现在对话里：积分卡、模型列表卡（点行复制模型 id）、出图卡（直接预览 + 复制路径 + 在文件夹中显示）、视频卡（进度条 → 播放器）、状态卡、配置卡。\n\n## 用户不用记工具名\n\n一句话就行，Agent 会自己挑工具：\n\n- 「还剩多少积分」→ 积分卡\n- 「能生视频的模型有哪些」→ 模型卡\n- 「画一张赛博朋克风格的猫」→ 出图卡\n- 「生成一段 5 秒的海边日落」→ 视频卡（带进度）\n\n六个工具名只在需要显式指定时才会用到，平常用不着记。\n","author":"localWorkspace","github":"https://github.com/wyh1sc/toonflow-connect-workbuddy","configRules":[{"type":"input","field":"proxyUrl","title":"本地服务地址（端口冲突时可改）","value":"http://127.0.0.1:8289","props":{"placeholder":"http://127.0.0.1:8289"}},{"type":"input","field":"outputDir","title":"产物保存目录（工作区相对路径）","value":"assets/generated","props":{"placeholder":"assets/generated"}},{"type":"switch","field":"autoStart","title":"启用内置本地服务","value":true}],"components":["workbuddySetup","workbuddyStatus","workbuddyDrawImage","workbuddyDrawVideo","workbuddyCredits","workbuddyMediaModels"]} */
+/*! toonflowTool:{"name":"workbuddyConnect","version":"2.2.2","displayName":"WorkBuddy 连接","description":"单文件自带代理：自动读取本机 WorkBuddy 桌面端凭据，起一个本地 OpenAI 兼容服务（对话模型 + 生图 + 生视频 + 积分 + 模型目录）。装完调用 workbuddySetup 即可把文本模型写进 Toonflow 供应商。","prompt":"WorkBuddy 连接插件（本机 WorkBuddy 账号池）。用户通常不知道工具名，根据意图自己选，不要要求用户说工具名。涉及积分/额度/余额时用 workbuddyCredits；问「有哪些模型 / 能画什么图 / 能生什么视频 / 支持多长多清晰」时，先调 workbuddyMediaModels 列出本插件支持的模型再回答——即使项目里还有其它供应商，也必须把 WorkBuddy 这一份列出来，不要凭印象跳过；要画图、改图、生成图片时用 workbuddyDrawImage（同步，几十秒）；要生成视频、图生视频时用 workbuddyDrawVideo（异步，先告知大概等待时长，进度会自动显示）；状态、端口、连不上、没反应、报错时用 workbuddyStatus；首次使用、提示没有可用账号、模型列表为空时用 workbuddySetup 自动配置。花积分前先用 workbuddyCredits 报额度。模型 id 必须取自 workbuddyMediaModels 的真实结果，不要编。生成结果保存在工作区，回复里给相对路径。用户明确要求在画布节点里生成时才不用本插件。","readme":"# WorkBuddy 连接\n\n单文件插件，自带本地代理：自动发现本机 WorkBuddy 桌面端凭据 → 起本地 OpenAI 兼容服务 → 给 Toonflow 提供对话模型、生图、生视频。\n\n## 装完三步\n\n1. 确认本机装了并登录过 WorkBuddy 桌面端（凭据自动读取，无需手动填 token）。\n2. 在对话里说一句「用 workbuddySetup 配置一下」。\n3. 到「设置 → 模型供应商」选 WorkBuddy 的任一模型即可对话。\n\n## 工具\n\n- `workbuddySetup`：自动写文本模型供应商到 Toonflow 设置（一次性）\n- `workbuddyStatus`：看本地服务端口、账号数、凭据来源\n- `workbuddyDrawImage`：文生图 / 图生图\n- `workbuddyDrawVideo`：文生视频 / 图生视频（异步自动轮询）\n- `workbuddyCredits`：剩余积分与账号池合计\n- `workbuddyMediaModels`：可用的图片与视频模型\n\n## 说明\n\n- 本地服务只监听 127.0.0.1，端口默认 8289（与 python 版 8189 错开），实际端口写进 `~/.toonflow-workbuddy/port.txt`。\n- 凭据来源优先级：环境变量 `CODEBUDDY_AUTH_TOKEN` → 本插件凭据库 → DSH 凭据库 → WorkBuddy 桌面端认证文件（AES-256-GCM 解密）。\n- 桌面端 exe 定位：环境变量 `WORKBUDDY_APP_EXECUTABLE` → 常见安装路径 → Windows 注册表 DisplayIcon。\n\n## 界面\n\n结果会以卡片形式出现在对话里：积分卡、模型列表卡（点行复制模型 id）、出图卡（直接预览 + 复制路径 + 在文件夹中显示）、视频卡（进度条 → 播放器）、状态卡、配置卡。\n\n## 用户不用记工具名\n\n一句话就行，Agent 会自己挑工具：\n\n- 「还剩多少积分」→ 积分卡\n- 「能生视频的模型有哪些」→ 模型卡\n- 「画一张赛博朋克风格的猫」→ 出图卡\n- 「生成一段 5 秒的海边日落」→ 视频卡（带进度）\n\n六个工具名只在需要显式指定时才会用到，平常用不着记。\n","author":"localWorkspace","github":"https://github.com/wyh1sc/toonflow-connect-workbuddy","configRules":[{"type":"input","field":"proxyUrl","title":"本地服务地址（端口冲突时可改）","value":"http://127.0.0.1:8289","props":{"placeholder":"http://127.0.0.1:8289"}},{"type":"input","field":"outputDir","title":"产物保存目录（工作区相对路径）","value":"assets/generated","props":{"placeholder":"assets/generated"}},{"type":"switch","field":"autoStart","title":"启用内置本地服务","value":true}],"components":["workbuddySetup","workbuddyStatus","workbuddyDrawImage","workbuddyDrawVideo","workbuddyCredits","workbuddyMediaModels"]} */
 /*! toonflowToolClient:{"code":"// WorkBuddy 连接 —— 工具结果卡片（客户端界面）\n// 宿主通过 window.toonflowToolHost 复用同一份 vue 实例，\n// 导出对象形如 { 工具名: Vue 组件 }，挂在 window.toonflowToolViews.workbuddyConnect 上。\n// 注意：本文件会被整段塞进  注释行，源码里禁止出现块注释结束符（星号加斜杠）。\n(function (global, factory) {\n  if (typeof exports === \"object\" && typeof module !== \"undefined\") {\n    module.exports = factory(require(\"vue\"));\n  } else if (typeof define === \"function\" && define.amd) {\n    define([\"vue\"], factory);\n  } else {\n    global = typeof globalThis !== \"undefined\" ? globalThis : global || self;\n    global.toonflowToolViews = global.toonflowToolViews || {};\n    global.toonflowToolViews.workbuddyConnect = factory(global.toonflowToolHost.vue);\n  }\n})(this, function (Vue) {\n  \"use strict\";\n\n  var h = Vue.h;\n  var defineComponent = Vue.defineComponent;\n  var computed = Vue.computed;\n  var ref = Vue.ref;\n\n  var STATUS_TEXT = {\n    running: \"调用中…\",\n    success: \"已完成\",\n    error: \"调用失败\",\n    interrupted: \"已中断\",\n  };\n  var STATUS_CLASS = {\n    running: \"wait\",\n    success: \"ok\",\n    error: \"err\",\n    interrupted: \"muted\",\n  };\n\n  \n\n  var CARD_RE = /<!--wbx:([\\s\\S]*?)-->/;\n\n  function parseCardText(text) {\n    var m = CARD_RE.exec(String(text || \"\"));\n    if (!m) return null;\n    try {\n      var o = JSON.parse(m[1]);\n      return o && typeof o === \"object\" ? o : null;\n    } catch (e) {\n      return null;\n    }\n  }\n\n  function unwrap(raw) {\n    if (raw === undefined || raw === null || raw === \"\") return null;\n    if (typeof raw === \"object\") {\n      return raw.details && typeof raw.details === \"object\" ? raw.details : raw;\n    }\n    var text = String(raw);\n    var fromCard = parseCardText(text);\n    if (fromCard) return fromCard;\n    try {\n      var o = JSON.parse(text);\n      if (o && typeof o === \"object\" && o.details && typeof o.details === \"object\") return o.details;\n      return o;\n    } catch (e) {\n      return null;\n    }\n  }\n\n  function resultOf(tool) {\n    return unwrap(tool && tool.result) || {};\n  }\n\n  function argsOf(tool) {\n    return unwrap(tool && tool.args) || {};\n  }\n\n  \n\n  function fmtNum(v) {\n    var n = Number(v);\n    if (!isFinite(n)) return \"—\";\n    var parts = n.toFixed(2).split(\".\");\n    return parts[0].replace(/\\B(?=(\\d{3})+(?!\\d))/g, \",\") + \".\" + parts[1];\n  }\n\n  function fmtBytes(n) {\n    var b = Number(n);\n    if (!isFinite(b) || b <= 0) return \"\";\n    if (b < 1024) return b + \" B\";\n    if (b < 1024 * 1024) return (b / 1024).toFixed(0) + \" KB\";\n    return (b / 1024 / 1024).toFixed(2) + \" MB\";\n  }\n\n  function baseName(p) {\n    var s = String(p || \"\");\n    var i = Math.max(s.lastIndexOf(\"/\"), s.lastIndexOf(\"\\\\\"));\n    return i >= 0 ? s.slice(i + 1) : s;\n  }\n\n  function fileUrl(directory, path) {\n    if (!directory || !path) return \"\";\n    var dir = typeof directory === \"string\" ? directory : directory.path || \"\";\n    if (!dir) return \"\";\n    return (\n      \"/api/workspaces/files/read?directory=\" + encodeURIComponent(dir) + \"&path=\" + encodeURIComponent(path)\n    );\n  }\n\n  function copyText(text) {\n    try {\n      if (navigator.clipboard && navigator.clipboard.writeText) {\n        navigator.clipboard.writeText(text);\n        return true;\n      }\n    } catch (e) {\n      \n    }\n    try {\n      var ta = document.createElement(\"textarea\");\n      ta.value = text;\n      ta.style.position = \"fixed\";\n      ta.style.opacity = \"0\";\n      document.body.appendChild(ta);\n      ta.select();\n      document.execCommand(\"copy\");\n      document.body.removeChild(ta);\n      return true;\n    } catch (e2) {\n      return false;\n    }\n  }\n\n  function postJson(url, body) {\n    return fetch(url, {\n      method: \"POST\",\n      headers: { \"content-type\": \"application/json\", \"x-toonflow-workspace\": \"1\" },\n      body: JSON.stringify(body || {}),\n    }).then(function (r) {\n      return r.ok;\n    });\n  }\n\n  \n\n  function header(ctx) {\n    return h(\"div\", { class: \"wbx-header\" }, [\n      h(\"div\", { class: \"wbx-logo\" }, ctx.icon || \"W\"),\n      h(\"div\", { class: \"wbx-headBody\" }, [\n        h(\"div\", { class: \"wbx-title\" }, ctx.title || \"\"),\n        ctx.sub ? h(\"div\", { class: \"wbx-sub\" }, ctx.sub) : null,\n      ]),\n      h(\"div\", { class: \"wbx-tags\" }, [\n        ctx.badge ? h(\"span\", { class: \"wbx-tag wbx-tag--info\" }, ctx.badge) : null,\n        h(\n          \"span\",\n          { class: \"wbx-tag wbx-tag--\" + (STATUS_CLASS[ctx.status] || \"muted\") },\n          STATUS_TEXT[ctx.status] || ctx.status || \"\",\n        ),\n      ]),\n    ]);\n  }\n\n  function note(text) {\n    return text ? h(\"p\", { class: \"wbx-note\" }, text) : null;\n  }\n\n  function kv(rows) {\n    return h(\n      \"div\",\n      { class: \"wbx-kv\" },\n      rows.map(function (r) {\n        return h(\"div\", { class: \"wbx-kvRow\" }, [\n          h(\"span\", null, r[0]),\n          h(\"span\", null, r[1] === undefined || r[1] === null || r[1] === \"\" ? \"—\" : String(r[1])),\n        ]);\n      }),\n    );\n  }\n\n  function skeleton(label) {\n    return h(\"div\", { class: \"wbx-skeleton\" }, [h(\"i\", { class: \"wbx-dot\" }), h(\"span\", null, label || \"正在准备…\")]);\n  }\n\n  function btn(text, opts) {\n    opts = opts || {};\n    return h(\n      \"button\",\n      {\n        class: \"wbx-btn\" + (opts.primary ? \" wbx-btn--primary\" : \"\"),\n        type: \"button\",\n        title: opts.title || text,\n        disabled: !!opts.disabled,\n        onClick: opts.onClick,\n      },\n      text,\n    );\n  }\n\n  function cardClass(status) {\n    return \"wbx-card wbx-card--\" + (STATUS_CLASS[status] || \"muted\");\n  }\n\n  \n\n  var CreditsCard = defineComponent({\n    name: \"WorkbuddyCredits\",\n    props: { tool: Object, directory: [String, Object], toolSessionId: String },\n    setup: function (props) {\n      var res = computed(function () {\n        return resultOf(props.tool);\n      });\n      var status = computed(function () {\n        return (props.tool && props.tool.status) || \"\";\n      });\n      var region = computed(function () {\n        return res.value.region === \"global\" ? \"国际区\" : \"国内区\";\n      });\n      return function () {\n        var d = res.value;\n        var ready = status.value === \"success\" && d && d.credits !== undefined;\n        return h(\"div\", { class: cardClass(status.value) }, [\n          header({\n            icon: \"W\",\n            title: \"WorkBuddy 积分\",\n            sub: ready ? [d.nickname || d.uid || \"未知账号\", region.value].join(\" · \") : \"正在查询额度\",\n            badge: d && d.accounts ? d.accounts + \" 个账号\" : \"\",\n            status: status.value,\n          }),\n          ready\n            ? h(\"div\", { class: \"wbx-bigNum\" }, [\n                fmtNum(d.credits),\n                h(\"small\", null, \"积分\"),\n              ])\n            : skeleton(\"正在向账号池查询额度…\"),\n          ready\n            ? kv([\n                [\"最近到期\", d.cycleEnd],\n                [\"账号池合计\", d.poolCredits !== undefined ? fmtNum(d.poolCredits) : \"\"],\n                [\"账号数\", d.accounts],\n              ])\n            : null,\n          note(ready ? \"数据来自本机内置服务 127.0.0.1:\" + (d.port || 8289) : \"\"),\n        ]);\n      };\n    },\n  });\n\n  \n\n  function modelRow(m, kind) {\n    var vg = m.videoGeneration || {};\n    var tags = Array.isArray(m.tags) ? m.tags : [];\n    var chips = tags.map(function (t) {\n      return h(\"span\", { class: \"wbx-chip\" }, t === \"text-to-image\" ? \"文生图\" : t === \"image-to-image\" ? \"图生图\" : t === \"text-to-video\" ? \"文生视频\" : t === \"image-to-video\" ? \"图生视频\" : t);\n    });\n    var meta = \"\";\n    if (kind === \"video\") {\n      meta = [vg.minSeconds && vg.maxSeconds ? vg.minSeconds + \"-\" + vg.maxSeconds + \" 秒\" : \"\", (vg.resolutions || []).join(\"/\")]\n        .filter(Boolean)\n        .join(\" · \");\n    } else if (m.credit != null || m.credits != null) {\n      meta = (m.credit != null ? m.credit : m.credits) + \" 积分\";\n    }\n    return h(\n      \"div\",\n      {\n        class: \"wbx-item\",\n        title: \"点击复制模型 id：\" + m.id,\n        onClick: function () {\n          copyText(m.id);\n        },\n      },\n      [h(\"span\", { class: \"wbx-itemName\" }, m.id)].concat(chips).concat([h(\"span\", { class: \"wbx-itemMeta\" }, meta)]),\n    );\n  }\n\n  var ModelsCard = defineComponent({\n    name: \"WorkbuddyMediaModels\",\n    props: { tool: Object, directory: [String, Object], toolSessionId: String },\n    setup: function (props) {\n      var res = computed(function () {\n        return resultOf(props.tool);\n      });\n      var status = computed(function () {\n        return (props.tool && props.tool.status) || \"\";\n      });\n      var copied = ref(false);\n      return function () {\n        var d = res.value || {};\n        var img = Array.isArray(d.image) ? d.image : [];\n        var vid = Array.isArray(d.video) ? d.video : [];\n        var ready = status.value === \"success\" && (img.length || vid.length);\n        return h(\"div\", { class: cardClass(status.value) }, [\n          header({\n            icon: \"⛁\",\n            title: \"可用媒体模型\",\n            sub: ready ? \"图片 \" + img.length + \" 个 · 视频 \" + vid.length + \" 个\" : \"正在拉取模型目录\",\n            status: status.value,\n          }),\n          ready\n            ? h(\"div\", { class: \"wbx-toolbar\" }, [\n                h(\"span\", null, \"共 \" + (img.length + vid.length) + \" 项\"),\n                copied.value ? h(\"span\", { class: \"wbx-copied\" }, \"已复制\") : null,\n              ])\n            : null,\n          ready\n            ? h(\"div\", { class: \"wbx-list\" }, [].concat(\n                img.length ? [h(\"div\", { class: \"wbx-group\" }, \"图片\")] : [],\n                img.map(function (m) {\n                  return modelRow(m, \"image\");\n                }),\n                vid.length ? [h(\"div\", { class: \"wbx-group\" }, \"视频\")] : [],\n                vid.map(function (m) {\n                  return modelRow(m, \"video\");\n                }),\n              ))\n            : skeleton(\"正在读取 WorkBuddy 模型目录…\"),\n          note(ready ? \"点任意一行复制模型 id\" : \"\"),\n        ]);\n      };\n    },\n  });\n\n  \n\n  var ImageCard = defineComponent({\n    name: \"WorkbuddyDrawImage\",\n    props: { tool: Object, directory: [String, Object], toolSessionId: String },\n    setup: function (props) {\n      var res = computed(function () {\n        return resultOf(props.tool);\n      });\n      var status = computed(function () {\n        return (props.tool && props.tool.status) || \"\";\n      });\n      var hint = ref(\"\");\n      var files = computed(function () {\n        var f = res.value && res.value.files;\n        return Array.isArray(f) ? f : [];\n      });\n      function reveal(path) {\n        postJson(\"/api/workspaces/files/reveal\", {\n          directory: typeof props.directory === \"string\" ? props.directory : \"\",\n          path: path,\n        }).then(function (ok) {\n          hint.value = ok ? \"\" : \"打开失败：可能不在工作区内\";\n        });\n      }\n      return function () {\n        var d = res.value || {};\n        var fs = files.value;\n        var ready = status.value === \"success\" && fs.length > 0;\n        var sub = [d.model, d.size, d.credit != null ? d.credit + \" 积分\" : \"\"].filter(Boolean).join(\" · \");\n        return h(\"div\", { class: cardClass(status.value) }, [\n          header({\n            icon: \"▣\",\n            title: ready ? \"出图完成\" : \"生成图片\",\n            sub: sub || \"正在生成\",\n            status: status.value,\n          }),\n          ready\n            ? h(\n                \"div\",\n                { class: \"wbx-media\" },\n                fs.map(function (f) {\n                  var url = fileUrl(props.directory, f.path);\n                  return url\n                    ? h(\"img\", { class: \"wbx-img\", src: url, alt: baseName(f.path), loading: \"lazy\" })\n                    : h(\"div\", { class: \"wbx-mediaFallback\" }, baseName(f.path));\n                }),\n              )\n            : skeleton(\"正在出图，通常十几秒…\"),\n          ready\n            ? h(\n                \"div\",\n                { class: \"wbx-dest\" },\n                fs.map(function (f) {\n                  return h(\"code\", { title: f.path }, f.path);\n                }),\n              )\n            : null,\n          ready\n            ? h(\"div\", { class: \"wbx-actions\" }, [\n                btn(\"复制路径\", {\n                  primary: true,\n                  onClick: function () {\n                    hint.value = copyText(fs.map(function (f) { return f.path; }).join(\"\\n\")) ? \"已复制\" : \"复制失败\";\n                  },\n                }),\n                btn(\"在文件夹中显示\", {\n                  onClick: function () {\n                    reveal(fs[0].path);\n                  },\n                }),\n                fs[0] && fs[0].bytes ? h(\"span\", { class: \"wbx-foot\" }, fmtBytes(fs[0].bytes)) : null,\n              ])\n            : null,\n          hint.value ? note(hint.value) : note(ready ? \"\" : \"\"),\n        ]);\n      };\n    },\n  });\n\n  \n\n  var VideoCard = defineComponent({\n    name: \"WorkbuddyDrawVideo\",\n    props: { tool: Object, directory: [String, Object], toolSessionId: String },\n    setup: function (props) {\n      var args = computed(function () {\n        return argsOf(props.tool);\n      });\n      var res = computed(function () {\n        return resultOf(props.tool);\n      });\n      var status = computed(function () {\n        return (props.tool && props.tool.status) || \"\";\n      });\n      var hint = ref(\"\");\n      var files = computed(function () {\n        var f = res.value && res.value.files;\n        return Array.isArray(f) ? f : [];\n      });\n      return function () {\n        var d = res.value || {};\n        var a = args.value || {};\n        var fs = files.value;\n        var running = status.value === \"running\";\n        var ready = status.value === \"success\" && fs.length > 0;\n        var sub = [d.model || a.model, d.seconds || a.seconds ? (d.seconds || a.seconds) + \" 秒\" : \"\", d.resolution || a.resolution]\n          .filter(Boolean)\n          .join(\" · \");\n        return h(\"div\", { class: cardClass(status.value) }, [\n          header({\n            icon: \"▶\",\n            title: ready ? \"视频生成完成\" : running ? \"正在生成视频\" : \"生成视频\",\n            sub: sub || \"异步任务\",\n            status: status.value,\n          }),\n          running ? h(\"div\", { class: \"wbx-bar\" }, [h(\"i\", null)]) : null,\n          running ? h(\"p\", { class: \"wbx-note\" }, \"异步任务，通常 1-6 分钟，完成后这里会变成播放器。\") : null,\n          ready\n            ? h(\n                \"div\",\n                { class: \"wbx-media\" },\n                fs.map(function (f) {\n                  var url = fileUrl(props.directory, f.path);\n                  return url\n                    ? h(\"video\", { class: \"wbx-video\", src: url, controls: true, preload: \"metadata\" })\n                    : h(\"div\", { class: \"wbx-mediaFallback\" }, baseName(f.path));\n                }),\n              )\n            : null,\n          ready\n            ? h(\n                \"div\",\n                { class: \"wbx-dest\" },\n                fs.map(function (f) {\n                  return h(\"code\", { title: f.path }, f.path);\n                }),\n              )\n            : null,\n          ready\n            ? h(\"div\", { class: \"wbx-actions\" }, [\n                btn(\"复制路径\", {\n                  primary: true,\n                  onClick: function () {\n                    hint.value = copyText(fs.map(function (f) { return f.path; }).join(\"\\n\")) ? \"已复制\" : \"复制失败\";\n                  },\n                }),\n                fs[0] && fs[0].bytes ? h(\"span\", { class: \"wbx-foot\" }, fmtBytes(fs[0].bytes)) : null,\n              ])\n            : null,\n          d && d.taskId ? note(\"任务 \" + d.taskId) : hint.value ? note(hint.value) : null,\n        ]);\n      };\n    },\n  });\n\n  \n\n  var StatusCard = defineComponent({\n    name: \"WorkbuddyStatus\",\n    props: { tool: Object, directory: [String, Object], toolSessionId: String },\n    setup: function (props) {\n      var res = computed(function () {\n        return resultOf(props.tool);\n      });\n      var status = computed(function () {\n        return (props.tool && props.tool.status) || \"\";\n      });\n      return function () {\n        var d = res.value || {};\n        var srv = d.server || {};\n        var bal = d.balance || {};\n        var ready = status.value === \"success\";\n        return h(\"div\", { class: cardClass(status.value) }, [\n          header({\n            icon: \"◎\",\n            title: \"WorkBuddy 状态\",\n            sub: srv.ok ? \"本地服务 127.0.0.1:\" + srv.port + (srv.own ? \"（内置）\" : \"（复用）\") : \"服务未启动\",\n            status: status.value,\n          }),\n          ready\n            ? kv([\n                [\"本地服务\", srv.ok ? \"127.0.0.1:\" + srv.port : srv.error || \"未启动\"],\n                [\"当前账号\", bal.nickname || bal.uid],\n                [\"剩余积分\", bal.credits !== undefined ? fmtNum(bal.credits) : \"\"],\n                [\"账号池合计\", bal.poolCredits !== undefined ? fmtNum(bal.poolCredits) : \"\"],\n                [\"账号数\", bal.accounts],\n              ])\n            : skeleton(\"正在检查服务与账号…\"),\n          note(ready ? \"\" : \"\"),\n        ]);\n      };\n    },\n  });\n\n  \n\n  var SetupCard = defineComponent({\n    name: \"WorkbuddySetup\",\n    props: { tool: Object, directory: [String, Object], toolSessionId: String },\n    setup: function (props) {\n      var res = computed(function () {\n        return resultOf(props.tool);\n      });\n      var status = computed(function () {\n        return (props.tool && props.tool.status) || \"\";\n      });\n      return function () {\n        var d = res.value || {};\n        var srv = d.server || {};\n        var ready = status.value === \"success\";\n        var ok = ready && srv.ok && (d.models || d.accounts);\n        return h(\"div\", { class: cardClass(ok ? status.value : ready ? \"error\" : status.value) }, [\n          header({\n            icon: \"⚙\",\n            title: \"WorkBuddy 配置\",\n            sub: srv.ok ? \"服务已就绪 · 模型 \" + (d.models || 0) + \" 个\" : \"正在初始化\",\n            status: ok || !ready ? status.value : \"error\",\n          }),\n          ready\n            ? kv([\n                [\"本地服务\", srv.ok ? \"127.0.0.1:\" + srv.port : srv.error || \"未启动\"],\n                [\"可用账号\", d.accounts != null ? d.accounts + \" 个\" : \"\"],\n                [\"写入模型\", d.models != null ? d.models + \" 个\" : \"未写入\"],\n                [\"Toonflow\", d.tfPort ? \"端口 \" + d.tfPort : \"未发现\"],\n              ])\n            : skeleton(\"正在发现凭据并启动服务…\"),\n          ready && ok ? note(\"已写入 model provider，去「设置 → 模型供应商 → WorkBuddy」挑模型即可。\") : null,\n          ready && !ok ? note(\"没自动完成：确认本机装了并登录 WorkBuddy 桌面端，或设置环境变量 CODEBUDDY_AUTH_TOKEN。\") : null,\n        ]);\n      };\n    },\n  });\n\n  return {\n    workbuddyCredits: CreditsCard,\n    workbuddyMediaModels: ModelsCard,\n    workbuddyDrawImage: ImageCard,\n    workbuddyDrawVideo: VideoCard,\n    workbuddyStatus: StatusCard,\n    workbuddySetup: SetupCard,\n  };\n});\n","css":"\n\n\n.wbx-card {\n  box-sizing: border-box;\n  border: 1px solid var(--el-border-color-lighter, #e5e7eb);\n  background: var(--el-bg-color, #fff);\n  color: var(--el-text-color-primary, #1f2937);\n  border-radius: 14px;\n  padding: 15px 17px 13px;\n  font-size: 0.875rem;\n  line-height: 1.6;\n  max-width: 560px;\n  overflow: hidden;\n}\n.wbx-card--err {\n  border-color: var(--el-color-danger-light-5, #f7bcbc);\n}\n\n\n.wbx-header {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n}\n.wbx-logo {\n  width: 30px;\n  height: 30px;\n  flex: none;\n  border-radius: 9px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-size: 15px;\n  font-weight: 700;\n  color: #fff;\n  background: linear-gradient(135deg, #2f6bff, #7a4bff);\n  user-select: none;\n}\n.wbx-headBody {\n  display: flex;\n  flex-direction: column;\n  min-width: 0;\n}\n.wbx-title {\n  font-size: 0.9375rem;\n  font-weight: 600;\n  letter-spacing: 0.0125rem;\n}\n.wbx-sub {\n  color: var(--el-text-color-secondary, #6b7280);\n  font-size: 0.75rem;\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n.wbx-tags {\n  margin-left: auto;\n  flex: none;\n  display: flex;\n  align-items: center;\n  gap: 6px;\n}\n.wbx-tag {\n  border-radius: 5px;\n  padding: 2px 8px;\n  font-size: 0.6875rem;\n  line-height: 1.1rem;\n  white-space: nowrap;\n}\n.wbx-tag--ok {\n  background: var(--el-color-success-light-9, #e8f8ef);\n  color: var(--el-color-success, #16a34a);\n}\n.wbx-tag--wait {\n  background: var(--el-color-warning-light-9, #fdf5e6);\n  color: var(--el-color-warning, #b45309);\n}\n.wbx-tag--err {\n  background: var(--el-color-danger-light-9, #fdeeee);\n  color: var(--el-color-danger, #dc2626);\n}\n.wbx-tag--info,\n.wbx-tag--muted {\n  background: var(--el-fill-color, #eef0f3);\n  color: var(--el-text-color-secondary, #6b7280);\n}\n\n\n.wbx-bigNum {\n  margin: 15px 0 2px;\n  font-size: 29px;\n  font-weight: 700;\n  letter-spacing: -0.01em;\n  font-variant-numeric: tabular-nums;\n}\n.wbx-bigNum small {\n  font-size: 13px;\n  font-weight: 500;\n  color: var(--el-text-color-secondary, #6b7280);\n  margin-left: 6px;\n}\n\n\n.wbx-kv {\n  margin-top: 12px;\n  background: var(--el-fill-color-light, #f6f7f9);\n  border-radius: 10px;\n  padding: 9px 12px;\n}\n.wbx-kvRow {\n  display: flex;\n  justify-content: space-between;\n  gap: 12px;\n  font-size: 0.8125rem;\n  padding: 3px 0;\n}\n.wbx-kvRow > span:first-child {\n  color: var(--el-text-color-secondary, #6b7280);\n  flex: none;\n}\n.wbx-kvRow > span:last-child {\n  font-variant-numeric: tabular-nums;\n  text-align: right;\n  min-width: 0;\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n\n\n.wbx-toolbar {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  margin-top: 12px;\n  padding: 0 2px;\n  font-size: 0.75rem;\n  color: var(--el-text-color-secondary, #6b7280);\n}\n.wbx-copied {\n  color: var(--el-color-success, #16a34a);\n}\n.wbx-list {\n  background: var(--el-fill-color-light, #f6f7f9);\n  border-radius: 10px;\n  margin-top: 8px;\n  padding: 6px;\n  max-height: 46vh;\n  overflow-y: auto;\n}\n.wbx-group {\n  padding: 6px 8px 3px;\n  font-size: 0.6875rem;\n  color: var(--el-text-color-secondary, #6b7280);\n  letter-spacing: 0.04em;\n}\n.wbx-item {\n  display: flex;\n  align-items: center;\n  gap: 7px;\n  padding: 6px 8px;\n  border-radius: 8px;\n  font-size: 0.8125rem;\n  cursor: pointer;\n}\n.wbx-item:hover {\n  background: var(--el-fill-color, #eef0f3);\n}\n.wbx-itemName {\n  font-weight: 500;\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n.wbx-chip {\n  flex: none;\n  background: var(--el-fill-color, #eef0f3);\n  color: var(--el-text-color-secondary, #6b7280);\n  border-radius: 4px;\n  padding: 1px 6px;\n  font-size: 0.6875rem;\n  line-height: 1rem;\n  white-space: nowrap;\n}\n.wbx-itemMeta {\n  margin-left: auto;\n  flex: none;\n  font-size: 0.75rem;\n  color: var(--el-text-color-secondary, #6b7280);\n  font-variant-numeric: tabular-nums;\n  opacity: 0.8;\n  white-space: nowrap;\n}\n\n\n.wbx-media {\n  margin-top: 13px;\n  border-radius: 10px;\n  overflow: hidden;\n  background: var(--el-fill-color-light, #f6f7f9);\n}\n.wbx-img,\n.wbx-video {\n  display: block;\n  width: 100%;\n  height: auto;\n  max-height: 420px;\n  object-fit: contain;\n  background: var(--el-fill-color-light, #f6f7f9);\n}\n.wbx-mediaFallback {\n  padding: 28px 12px;\n  text-align: center;\n  font-size: 0.75rem;\n  color: var(--el-text-color-secondary, #6b7280);\n}\n\n\n.wbx-dest {\n  display: flex;\n  flex-direction: column;\n  gap: 4px;\n  margin-top: 11px;\n  padding: 8px 12px;\n  background: var(--el-fill-color-light, #f6f7f9);\n  border-radius: 9px;\n  font-size: 0.8125rem;\n}\n.wbx-dest code {\n  font-family: ui-monospace, Consolas, Menlo, monospace;\n  font-size: 0.75rem;\n  color: var(--el-text-color-regular, #4b5563);\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n\n\n.wbx-actions {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  margin-top: 13px;\n}\n.wbx-btn {\n  border: 1px solid var(--el-border-color-lighter, #e5e7eb);\n  background: transparent;\n  color: var(--el-text-color-primary, #1f2937);\n  border-radius: 8px;\n  padding: 5px 13px;\n  font-size: 0.8125rem;\n  line-height: 1.4;\n  cursor: pointer;\n  transition: background-color 0.15s;\n}\n.wbx-btn:hover {\n  background: var(--el-fill-color-light, #f6f7f9);\n}\n.wbx-btn--primary {\n  background: var(--el-color-primary, #2f6bff);\n  border-color: var(--el-color-primary, #2f6bff);\n  color: #fff;\n}\n.wbx-btn--primary:hover {\n  background: var(--el-color-primary-light-3, #5b8bff);\n  border-color: var(--el-color-primary-light-3, #5b8bff);\n}\n.wbx-foot {\n  margin-left: auto;\n  font-size: 0.75rem;\n  color: var(--el-text-color-secondary, #6b7280);\n  font-variant-numeric: tabular-nums;\n}\n\n\n.wbx-bar {\n  margin-top: 14px;\n  height: 6px;\n  border-radius: 99px;\n  background: var(--el-fill-color-light, #f6f7f9);\n  overflow: hidden;\n}\n.wbx-bar > i {\n  display: block;\n  height: 100%;\n  width: 40%;\n  border-radius: 99px;\n  background: linear-gradient(90deg, #2f6bff, #7a4bff);\n  animation: wbx-slide 1.3s ease-in-out infinite;\n}\n@keyframes wbx-slide {\n  0% {\n    transform: translateX(-100%);\n  }\n  100% {\n    transform: translateX(260%);\n  }\n}\n\n\n.wbx-skeleton {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  margin-top: 14px;\n  padding: 12px;\n  border-radius: 10px;\n  background: var(--el-fill-color-light, #f6f7f9);\n  font-size: 0.8125rem;\n  color: var(--el-text-color-secondary, #6b7280);\n}\n.wbx-dot {\n  width: 7px;\n  height: 7px;\n  border-radius: 50%;\n  background: var(--el-color-primary, #2f6bff);\n  animation: wbx-pulse 1s ease-in-out infinite;\n}\n@keyframes wbx-pulse {\n  0%,\n  100% {\n    opacity: 0.25;\n  }\n  50% {\n    opacity: 1;\n  }\n}\n.wbx-note {\n  margin: 9px 2px 0;\n  font-size: 0.75rem;\n  color: var(--el-text-color-secondary, #94a3b8);\n  white-space: pre-wrap;\n  overflow-wrap: anywhere;\n}\n"} */
 import { z } from "toonflow:tool-zod";
 import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
@@ -43,8 +43,21 @@ const COOLDOWN_MS = 300000;
 const HEALTH_TTL_MS = 6 * 3600 * 1000;
 const HEALTH_HIDE = new Set(["missing", "reject"]);
 const HEALTH_WARN = { unavail: "· 暂不可用", error: "· 异常" };
-const FAILOVER_CODES = new Set([14018, 11140]);
-const FAILOVER_HTTP = new Set([401, 403]);
+// 换号矩阵（对齐上游实测结论）：
+//   会换 = 402 无积分 / 401 凭据失效 / 429 限流 / 5xx 网关
+//   不换 = 403（code 11140 是策略拒绝 request illegal，换谁都拒，重试只会白烧额度）
+//         400（请求本身不合法，换谁都 400）
+//         流中途断开（字节已发出，重放会把两段回答拼在一起）
+// 实际判定见 failKind() / RETRYABLE_KINDS。
+const POLICY_REJECT_CODES = new Set([11140]);
+// 限流回池兜底：上游 429 不带 Retry-After，重置时间在响应体 msg 里；解析不出来就 30 分钟。
+const RATE_LIMIT_FALLBACK_MS = 30 * 60 * 1000;
+const CREDIT_FRESH_MS = 10 * 60 * 1000;
+const CYCLE_SOON_MS = 3 * 24 * 3600 * 1000;
+// 「测试」发真实体积请求：上游限流是按请求体积触发的（实测 ~20k 过、~30k 拒），
+// 发个 max_tokens:1 的 ping 探不出限流状态。
+const TEST_INPUT_TOKENS = 25000;
+const TEST_MODEL = "deepseek-v4.1-flash";
 const REASONING_LEVELS = new Set(["off", "minimal", "low", "medium", "high", "xhigh", "max"]);
 const MEDIA_TAGS = new Set(["text-to-image", "image-to-image", "text-to-video", "image-to-video"]);
 const BUSY_TITLES = {
@@ -475,6 +488,9 @@ async function persistCredentials(creds) {
       account: { uid: cred.uid || "", nickname: cred.nickname || "", uin: cred.uin || "" },
       source: cred.source || "discovered",
     };
+    // 文件名一律用真实 uid：DSH 凭据库的 accountId 是文件名 hash（与 uid 不同），
+    // 直接拿它做文件名会让同一个号在插件凭据库里多出一份，进而被 Python 版代理算成两个账号。
+    doc.accountId = doc.account.uid || doc.accountId;
     if (await writeJsonFile(join(dir, `${doc.accountId}.json`), doc)) n += 1;
   }
   return n;
@@ -526,6 +542,11 @@ const POOL = {
         creditAt: old.creditAt || 0,
         cycleEnd: old.cycleEnd || "",
         cooldownUntil: old.cooldownUntil || 0,
+        checkedIn: old.checkedIn ?? null,
+        streak: old.streak ?? 0,
+        checkinError: "",
+        explain: old.explain || "",
+        tokenAt: old.tokenAt || 0,
         error: "",
       };
     });
@@ -534,6 +555,23 @@ const POOL = {
 
   usable() {
     return this.accounts.filter((a) => !this.disabled.has(a.uid) && (a.cooldownUntil || 0) < Date.now());
+  },
+
+  // 五键全序（对齐上游）：
+  //   1) 可用（不在冷却）优先
+  //   2) 积分高——只让 10 分钟内的新鲜读数参与，避免每次挑号都去打上游
+  //   3) 3 天内到期的积分包优先（先花会过期的）
+  //   4) 凭据更晚过期的优先
+  //   5) uid 收尾，保证同一状态每次挑到同一个号（可复现）
+  rank(a) {
+    const fresh = a.credits != null && Date.now() - (a.creditAt || 0) <= CREDIT_FRESH_MS;
+    return {
+      cooled: (a.cooldownUntil || 0) < Date.now() ? 0 : 1,
+      credits: fresh ? Number(a.credits) : -1,
+      soon: a.cycleEnd && Date.parse(a.cycleEnd.replace(" ", "T")) - Date.now() <= CYCLE_SOON_MS ? 0 : 1,
+      tokenAt: -(a.tokenAt || 0),
+      uid: a.uid || "",
+    };
   },
 
   pick(exclude) {
@@ -545,7 +583,15 @@ const POOL = {
       const hit = list.find((a) => a.uid === this.fixedUid);
       if (hit) return hit;
     }
-    return list.slice().sort((x, y) => (y.credits ?? -1) - (x.credits ?? -1))[0];
+    const keyed = list.map((a) => ({ a, k: this.rank(a) }));
+    keyed.sort((x, y) => {
+      if (x.k.cooled !== y.k.cooled) return x.k.cooled - y.k.cooled;
+      if (x.k.credits !== y.k.credits) return y.k.credits - x.k.credits;
+      if (x.k.soon !== y.k.soon) return x.k.soon - y.k.soon;
+      if (x.k.tokenAt !== y.k.tokenAt) return x.k.tokenAt - y.k.tokenAt;
+      return x.k.uid < y.k.uid ? -1 : x.k.uid > y.k.uid ? 1 : 0;
+    });
+    return keyed[0].a;
   },
 
   active() {
@@ -574,6 +620,11 @@ const POOL = {
         enabled: !this.disabled.has(a.uid),
         active: active ? active.uid === a.uid : false,
         cooldown: Math.max(0, Math.round(((a.cooldownUntil || 0) - Date.now()) / 1000)),
+        checkedIn: a.checkedIn,
+        streak: a.streak || 0,
+        checkinError: a.checkinError || "",
+        creditsAge: a.creditAt ? Math.round((Date.now() - a.creditAt) / 1000) : 0,
+        explain: a.explain || "",
         error: a.error,
         source: a.source,
       })),
@@ -990,19 +1041,74 @@ function classifyHealth(status, body) {
   return "error";
 }
 
+// 上游限流是按「请求体积」触发的（实测 ~20k 输入 token 过、~30k 拒），
+// 发 max_tokens:1 的 ping 探不出限流状态，所以「测试」按真实体积发一次（约 0.02 积分）。
+const FILLER_SENTENCE = "请忽略以下占位文本，直接回复一个字：好。";
+function bulkMessages(tokens) {
+  // 中文按 1 token ≈ 1.6 字符保守估，拼到目标体积
+  const need = Math.max(200, Math.round(tokens * 1.6));
+  const parts = [];
+  let size = 0;
+  while (size < need) {
+    parts.push(FILLER_SENTENCE);
+    size += FILLER_SENTENCE.length;
+  }
+  return [
+    { role: "system", content: NEUTRAL_HEAD },
+    { role: "user", content: parts.join("") },
+  ];
+}
+
+// 体积探测：真的打一次 25k token 的请求，顺便能探出限流。
+async function testAccount(acc, mid) {
+  const model = mid || TEST_MODEL;
+  const { status, body } = await httpJson(
+    `${chatBase(acc)}/v2/chat/completions`,
+    {
+      method: "POST",
+      headers: chatHeaders(acc.token),
+      body: JSON.stringify({ model, stream: true, messages: bulkMessages(TEST_INPUT_TOKENS) }),
+    },
+    120000,
+  );
+  if (status === 200) {
+    const st = "ok";
+    HEALTH.map[model] = { at: Date.now(), state: st };
+    return { ok: true, status, kind: st, message: `HTTP 200（${TEST_INPUT_TOKENS} token 体积探测通过）` };
+  }
+  const kind = failKind(status, body);
+  let message = `HTTP ${status} ${String(body?.msg || body?.message || "").slice(0, 120)}`.trim();
+  if (kind === "soft_rate") {
+    const at = parseResetAt(body);
+    message = at
+      ? `限流：${new Date(at).toLocaleString("zh-CN", { timeZone: "Asia/Shanghai" })} 重置`
+      : `限流：上游未给重置时间（按 30 分钟兜底）`;
+  } else if (kind === "policy_reject") {
+    message = `策略拒绝（request illegal）：不是登录问题，换号也没用`;
+  }
+  HEALTH.map[model] = { at: Date.now(), state: kind || "error" };
+  return { ok: false, status, kind, message, resetAt: kind === "soft_rate" ? parseResetAt(body) : 0 };
+}
+
+// 存活探测（给模型下拉的「可用/异常」标签用）：只发 1 token，不花额度。
+// 体积探测是另一条路：只有用户点「测试」才走 testAccount()，见上。
 async function probeOne(acc, mid) {
+  const { status, body } = await httpJson(
+    `${chatBase(acc)}/v2/chat/completions`,
+    {
+      method: "POST",
+      headers: chatHeaders(acc.token),
+      body: JSON.stringify({
+        model: mid,
+        stream: true,
+        max_tokens: 1,
+        messages: [{ role: "user", content: "hi" }],
+      }),
+    },
+    45000,
+  ).catch(() => ({ status: 0, body: null }));
   try {
-    const { status, body } = await httpJson(
-      `${chatBase(acc)}/v2/chat/completions`,
-      {
-        method: "POST",
-        headers: chatHeaders(acc.token),
-        body: JSON.stringify({ model: mid, stream: true, max_tokens: 1, messages: [{ role: "user", content: "hi" }] }),
-      },
-      45000,
-    );
-    const state = status === 200 ? "ok" : classifyHealth(status, body);
-    HEALTH.map[mid] = { at: Date.now(), state };
+    HEALTH.map[mid] = { at: Date.now(), state: status === 200 ? "ok" : classifyHealth(status, body) };
   } catch {
     HEALTH.map[mid] = { at: Date.now(), state: "unavail" };
   }
@@ -1058,11 +1164,121 @@ function sanitizePayload(payload) {
   return payload;
 }
 
-function failoverReason(status, body) {
+// 把失败归成稳定类别，供换号决策 + 前端提示使用。
+// policy_reject 是「账号没问题，是这次请求被策略拒了」——不换号、不重试。
+function failKind(status, body) {
   const code = Number(body?.code || 0);
-  if (FAILOVER_CODES.has(code)) return `上游返回 ${code}`;
-  if (FAILOVER_HTTP.has(status)) return `HTTP ${status}`;
+  const msg = String(body?.msg || body?.message || "").toLowerCase();
+  if (POLICY_REJECT_CODES.has(code) || msg.includes("request illegal") || msg.includes("illegal api invocation")) {
+    return "policy_reject";
+  }
+  if (code === 6004 || status === 429 || msg.includes("temporarily rate limited") || msg.includes("too many request")) {
+    return "soft_rate";
+  }
+  if (code === 14018 || status === 402 || msg.includes("insufficient") || msg.includes("no credit")) {
+    return "hard_credit";
+  }
+  if (status === 401 || code === 11102) return "session_dead";
+  if (code === 11102) return "not_found";
+  if (code === 11134 || msg.includes("temporarily unavailable") || msg.includes("model busy")) return "model_busy";
+  if (status >= 500) return "server";
+  if (status === 400) return "client";
   return "";
+}
+
+// 只有这些类别值得换号：换一个号确实可能成功。
+const RETRYABLE_KINDS = new Set(["soft_rate", "hard_credit", "session_dead", "server", "model_busy"]);
+
+// 上游 429 不带 Retry-After，重置时间写在 msg 里（形如「将在 2026-09-30 02:30:30 UTC+8 重置」）。
+// 按声明里的 UTC 偏移换算，解析不出来就交给 30 分钟兜底，不编造倒计时。
+function parseResetAt(body) {
+  const msg = String(body?.msg || body?.message || "");
+  const m = msg.match(/(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2}):(\d{2})(?:\s*UTC\s*([+-])(\d{1,2})(?::?(\d{2}))?)?/);
+  if (!m) return 0;
+  const [, y, mo, d, h, mi, s, sign, oh, om] = m;
+  let t = Date.UTC(+y, +mo - 1, +d, +h, +mi, +s);
+  if (sign) {
+    const off = (Number(oh) * 60 + Number(om || 0)) * 60000;
+    t -= sign === "+" ? off : -off;
+  }
+  const at = Number.isFinite(t) ? t : 0;
+  // 上游给的时间必须在未来，否则当作解析失败（时钟漂移/格式变了）
+  return at > Date.now() - 60000 ? at : 0;
+}
+
+function failoverReason(status, body) {
+  const kind = failKind(status, body);
+  if (!kind) return "";
+  const code = Number(body?.code || 0);
+  const text = String(body?.msg || body?.message || "").slice(0, 120);
+  return { kind, status, code, text };
+}
+
+/* ---- 签到 ---- */
+
+async function billingPost(acc, path, payload) {
+  return httpJson(
+    `${billingBase(acc)}${path}`,
+    { method: "POST", headers: billingHeaders(acc), body: JSON.stringify(payload || {}) },
+    20000,
+  );
+}
+
+async function fetchCheckinStatus(acc) {
+  const { status, body } = await billingPost(acc, "/v2/billing/meter/checkin-activity-status", {});
+  if (status !== 200) throw new Error(`HTTP ${status} ${String(body?.msg || "")}`.trim());
+  const d = body?.data || {};
+  // 上游真实字段：today_checked_in / streak_days（不是 today_checked）。
+  // 下面几个别名是给旧版本或国际区留的兜底。
+  return {
+    checkedIn: Boolean(
+      d.today_checked_in ?? d.today_checked ?? d.todayChecked ?? d.checked_in ?? d.checkedIn,
+    ),
+    streak: Number(d.streak_days ?? d.streakDays ?? d.continue_days ?? 0) || 0,
+    todayCredit: Number(d.today_credit ?? d.daily_credit ?? 0) || 0,
+  };
+}
+
+async function claimCheckin(acc) {
+  const { status, body } = await billingPost(acc, "/v2/billing/meter/daily-checkin", {});
+  // 已经签过的返回 400「今天已签到，请明天再来」——这不是错误，按已签到处理。
+  if (status !== 200) {
+    const msg = String(body?.msg || "");
+    if (/已签到|已领取|already/i.test(msg)) return { credit: 0, streak: 0, already: true };
+    throw new Error(`HTTP ${status} ${msg}`.trim());
+  }
+  const d = body?.data || {};
+  return {
+    credit: Number(d.credit ?? d.reward ?? d.today_credit ?? d.daily_credit ?? 0) || 0,
+    streak: Number(d.streak_days ?? d.streakDays ?? 0) || 0,
+    already: false,
+  };
+}
+
+// 幂等：先查状态，已签到就不再发写入请求。
+async function checkinOne(acc) {
+  acc.checkinError = "";
+  try {
+    const st = await fetchCheckinStatus(acc);
+    acc.streak = st.streak || acc.streak || 0;
+    if (st.checkedIn) {
+      acc.checkedIn = true;
+      return { uid: acc.uid, ok: true, already: true, streak: acc.streak };
+    }
+    const r = await claimCheckin(acc);
+    acc.checkedIn = true;
+    acc.streak = r.streak || acc.streak || 0;
+    return { uid: acc.uid, ok: true, already: !!r.already, credit: r.credit, streak: acc.streak };
+  } catch (err) {
+    // 签名被当成错误的「已签到」也按成功显示
+    const msg = String(err?.message || err);
+    if (/已签到|已领取|already/i.test(msg)) {
+      acc.checkedIn = true;
+      return { uid: acc.uid, ok: true, already: true, streak: acc.streak };
+    }
+    acc.checkinError = msg.slice(0, 120);
+    return { uid: acc.uid, ok: false, message: acc.checkinError };
+  }
 }
 
 /* ---- SSE 聚合 ---- */
@@ -1155,13 +1371,18 @@ async function chatOnce(payload, exclude) {
       /* ignore */
     }
     const reason = failoverReason(resp.status, body);
-    if (reason) {
-      POOL.bench(acc);
+    if (reason && RETRYABLE_KINDS.has(reason.kind)) {
+      // 限流按上游给的恢复时间回池，积分耗尽按月周期包刷新（拿不到时间就走 30 分钟兜底）
+      let ms = COOLDOWN_MS;
+      if (reason.kind === "soft_rate") ms = Math.max(Date.now() + 60000, parseResetAt(body) || 0) - Date.now() || RATE_LIMIT_FALLBACK_MS;
+      POOL.bench(acc, ms);
       tried.add(acc.uid);
-      lastErr = new Error(`${reason}：${String(body?.msg || body?.message || "").slice(0, 120)}`);
+      lastErr = new Error(`${reason.kind}：${reason.text || `HTTP ${reason.status}`}`);
       continue;
     }
-    return { resp, acc };
+    // 不换号：403 策略拒绝（换谁都拒，重试只白烧额度）、400 请求本身不合法。
+    // 原样把上游响应交回去，让客户端看到真实错误。
+    return { resp, acc, policyReject: reason ? reason.kind : "" };
   }
   throw lastErr || new Error("没有可用账号（请先登录 WorkBuddy 桌面端）");
 }
@@ -1225,12 +1446,23 @@ async function handleChat(req) {
   delete payload.stream_options;
   let resp;
   let acc;
+  let policyReject = "";
   try {
     const r = await chatOnce(payload, []);
     resp = r.resp;
     acc = r.acc;
+    policyReject = r.policyReject || "";
   } catch (err) {
     return json({ error: { message: String(err?.message || err) } }, 502);
+  }
+  // 策略拒绝（403 / code 11140）与 400 请求不合法：原样透传上游状态与响应体。
+  // 客户端要能看出这是「被策略拒了」而不是「登录掉了」，重试也没有意义。
+  if (policyReject) {
+    const text = await resp.text().catch(() => "");
+    return new Response(text, {
+      status: resp.status,
+      headers: { "Content-Type": "application/json; charset=utf-8", ...CORS },
+    });
   }
   if (wantsStream) {
     return new Response(resp.body, {
@@ -1324,6 +1556,35 @@ async function handlePoolRoute(path, req) {
       await POOL.saveState();
     }
     return json({ ok: true, snapshot: POOL.snapshot() });
+  }
+  if (path.endsWith("/checkin")) {
+    const body = await req.json().catch(() => ({}));
+    const uid = String(body.uid || "");
+    const results = [];
+    for (const acc of POOL.accounts) {
+      if (uid && acc.uid !== uid) continue;
+      results.push(await checkinOne(acc));
+    }
+    for (const acc of POOL.accounts) {
+      if (uid && acc.uid !== uid) continue;
+      await refreshCredits(acc, true);
+    }
+    const snap = POOL.snapshot();
+    snap.checkin = results;
+    return json(snap);
+  }
+  if (path.endsWith("/test")) {
+    const body = await req.json().catch(() => ({}));
+    const uid = String(body.uid || "");
+    const mid = String(body.model || TEST_MODEL);
+    const acc = POOL.accounts.find((a) => a.uid === uid) || POOL.active();
+    if (!acc) return json({ ok: false, message: "没有账号" }, 400);
+    const r = await testAccount(acc, mid);
+    // 通过就立刻解除冷却并回池；策略拒绝/凭据失效只能手动测试回池，这里不自动放宽。
+    if (r.ok) acc.cooldownUntil = 0;
+    else if (r.kind === "soft_rate") POOL.bench(acc, Math.max(Date.now() + 60000, r.resetAt || 0) - Date.now() || RATE_LIMIT_FALLBACK_MS);
+    await refreshCredits(acc, true);
+    return json({ ...r, uid: acc.uid, nickname: acc.nickname, model: mid });
   }
   return json({ ok: false, message: "未知账号池操作" }, 404);
 }
