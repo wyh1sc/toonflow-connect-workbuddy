@@ -254,6 +254,27 @@ DeepSeek-V4.1-Flash     0.11x  正常      1000K   夜间折扣  deepseek-v4.1-f
 共 48 个对话模型
 ```
 
+### `panel/`（Toonflow 界面注入脚本）
+
+| 文件 | 作用 |
+|---|---|
+| `panel/toonflow_pool.js` | 输入框旁的「账号池」按钮 + 管理面板：积分/签到/测试/启用开关/**扫码添加账号** |
+| `panel/toonflow_qrlib.js` | 二维码生成（[qrcode-generator](https://github.com/kazuhikoarase/qrcode-generator)，MIT）内联版，只挂 `window.qrcode` |
+
+装法：把两个文件拷到 Toonflow 的 `app/Resources/app/views/mainview/`，在 `index.html` 的
+`</body>` 之前按顺序加两行（`qrlib` 必须在 `pool` 前面）：
+
+```html
+<script src="/toonflow_qrlib.js"></script>
+<script src="/toonflow_pool.js"></script>
+```
+
+改完刷新页面即可（`index.html` 是静态文件，不用重启 Toonflow）。
+
+**扫码添加账号**：面板里点「扫码添加账号」→ 选国内版 / 国际版 → 手机扫码 →
+前端轮询 `/pool/login/poll`，登录成功后 `/pool/login/commit` 自动把凭据写进
+`~/.toonflow-workbuddy/vault/<region>/<uid>.json` 并刷新账号池。
+
 ### `proxy/wb_proxy.py`
 
 单个 Python 文件，标准库实现，无第三方依赖。

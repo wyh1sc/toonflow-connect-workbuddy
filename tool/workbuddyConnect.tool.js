@@ -1,4 +1,4 @@
-/*! toonflowTool:{"name":"workbuddyConnect","version":"2.2.3","displayName":"WorkBuddy 连接","description":"单文件自带代理：自动读取本机 WorkBuddy 桌面端凭据，起一个本地 OpenAI 兼容服务（对话模型 + 生图 + 生视频 + 积分 + 模型目录）。装完调用 workbuddySetup 即可把文本模型写进 Toonflow 供应商。","prompt":"WorkBuddy 连接插件（本机 WorkBuddy 账号池）。用户通常不知道工具名，根据意图自己选，不要要求用户说工具名。涉及积分/额度/余额时用 workbuddyCredits；问「有哪些模型 / 能画什么图 / 能生什么视频 / 支持多长多清晰」时，先调 workbuddyMediaModels 列出本插件支持的模型再回答——即使项目里还有其它供应商，也必须把 WorkBuddy 这一份列出来，不要凭印象跳过；要画图、改图、生成图片时用 workbuddyDrawImage（同步，几十秒）；要生成视频、图生视频时用 workbuddyDrawVideo（异步，先告知大概等待时长，进度会自动显示）；状态、端口、连不上、没反应、报错时用 workbuddyStatus；首次使用、提示没有可用账号、模型列表为空时用 workbuddySetup 自动配置。花积分前先用 workbuddyCredits 报额度。模型 id 必须取自 workbuddyMediaModels 的真实结果，不要编。生成结果保存在工作区，回复里给相对路径。用户明确要求在画布节点里生成时才不用本插件。","readme":"# WorkBuddy 连接\n\n单文件插件，自带本地代理：自动发现本机 WorkBuddy 桌面端凭据 → 起本地 OpenAI 兼容服务 → 给 Toonflow 提供对话模型、生图、生视频。\n\n## 装完三步\n\n1. 确认本机装了并登录过 WorkBuddy 桌面端（凭据自动读取，无需手动填 token）。\n2. 在对话里说一句「用 workbuddySetup 配置一下」。\n3. 到「设置 → 模型供应商」选 WorkBuddy 的任一模型即可对话。\n\n## 工具\n\n- `workbuddySetup`：自动写文本模型供应商到 Toonflow 设置（一次性）\n- `workbuddyStatus`：看本地服务端口、账号数、凭据来源\n- `workbuddyDrawImage`：文生图 / 图生图\n- `workbuddyDrawVideo`：文生视频 / 图生视频（异步自动轮询）\n- `workbuddyCredits`：剩余积分与账号池合计\n- `workbuddyMediaModels`：可用的图片与视频模型\n\n## 说明\n\n- 本地服务只监听 127.0.0.1，端口默认 8289（与 python 版 8189 错开），实际端口写进 `~/.toonflow-workbuddy/port.txt`。\n- 凭据来源优先级：环境变量 `CODEBUDDY_AUTH_TOKEN` → 本插件凭据库 → DSH 凭据库 → WorkBuddy 桌面端认证文件（AES-256-GCM 解密）。\n- 桌面端 exe 定位：环境变量 `WORKBUDDY_APP_EXECUTABLE` → 常见安装路径 → Windows 注册表 DisplayIcon。\n\n## 界面\n\n结果会以卡片形式出现在对话里：积分卡、模型列表卡（点行复制模型 id）、出图卡（直接预览 + 复制路径 + 在文件夹中显示）、视频卡（进度条 → 播放器）、状态卡、配置卡。\n\n## 用户不用记工具名\n\n一句话就行，Agent 会自己挑工具：\n\n- 「还剩多少积分」→ 积分卡\n- 「能生视频的模型有哪些」→ 模型卡\n- 「画一张赛博朋克风格的猫」→ 出图卡\n- 「生成一段 5 秒的海边日落」→ 视频卡（带进度）\n\n六个工具名只在需要显式指定时才会用到，平常用不着记。\n","author":"localWorkspace","github":"https://github.com/wyh1sc/toonflow-connect-workbuddy","configRules":[{"type":"input","field":"proxyUrl","title":"本地服务地址（端口冲突时可改）","value":"http://127.0.0.1:8289","props":{"placeholder":"http://127.0.0.1:8289"}},{"type":"input","field":"outputDir","title":"产物保存目录（工作区相对路径）","value":"assets/generated","props":{"placeholder":"assets/generated"}},{"type":"switch","field":"autoStart","title":"启用内置本地服务","value":true}],"components":["workbuddySetup","workbuddyStatus","workbuddyDrawImage","workbuddyDrawVideo","workbuddyCredits","workbuddyMediaModels"]} */
+/*! toonflowTool:{"name":"workbuddyConnect","version":"2.3.0","displayName":"WorkBuddy 连接","description":"单文件自带代理：自动读取本机 WorkBuddy 桌面端凭据，起一个本地 OpenAI 兼容服务（对话模型 + 生图 + 生视频 + 积分 + 模型目录）。装完调用 workbuddySetup 即可把文本模型写进 Toonflow 供应商。","prompt":"WorkBuddy 连接插件（本机 WorkBuddy 账号池）。用户通常不知道工具名，根据意图自己选，不要要求用户说工具名。涉及积分/额度/余额时用 workbuddyCredits；问「有哪些模型 / 能画什么图 / 能生什么视频 / 支持多长多清晰」时，先调 workbuddyMediaModels 列出本插件支持的模型再回答——即使项目里还有其它供应商，也必须把 WorkBuddy 这一份列出来，不要凭印象跳过；要画图、改图、生成图片时用 workbuddyDrawImage（同步，几十秒）；要生成视频、图生视频时用 workbuddyDrawVideo（异步，先告知大概等待时长，进度会自动显示）；状态、端口、连不上、没反应、报错时用 workbuddyStatus；首次使用、提示没有可用账号、模型列表为空时用 workbuddySetup 自动配置。花积分前先用 workbuddyCredits 报额度。模型 id 必须取自 workbuddyMediaModels 的真实结果，不要编。生成结果保存在工作区，回复里给相对路径。用户明确要求在画布节点里生成时才不用本插件。","readme":"# WorkBuddy 连接\n\n单文件插件，自带本地代理：自动发现本机 WorkBuddy 桌面端凭据 → 起本地 OpenAI 兼容服务 → 给 Toonflow 提供对话模型、生图、生视频。\n\n## 装完三步\n\n1. 确认本机装了并登录过 WorkBuddy 桌面端（凭据自动读取，无需手动填 token）。\n2. 在对话里说一句「用 workbuddySetup 配置一下」。\n3. 到「设置 → 模型供应商」选 WorkBuddy 的任一模型即可对话。\n\n## 工具\n\n- `workbuddySetup`：自动写文本模型供应商到 Toonflow 设置（一次性）\n- `workbuddyStatus`：看本地服务端口、账号数、凭据来源\n- `workbuddyDrawImage`：文生图 / 图生图\n- `workbuddyDrawVideo`：文生视频 / 图生视频（异步自动轮询）\n- `workbuddyCredits`：剩余积分与账号池合计\n- `workbuddyMediaModels`：可用的图片与视频模型\n\n## 说明\n\n- 本地服务只监听 127.0.0.1，端口默认 8289（与 python 版 8189 错开），实际端口写进 `~/.toonflow-workbuddy/port.txt`。\n- 凭据来源优先级：环境变量 `CODEBUDDY_AUTH_TOKEN` → 本插件凭据库 → DSH 凭据库 → WorkBuddy 桌面端认证文件（AES-256-GCM 解密）。\n- 桌面端 exe 定位：环境变量 `WORKBUDDY_APP_EXECUTABLE` → 常见安装路径 → Windows 注册表 DisplayIcon。\n\n## 界面\n\n结果会以卡片形式出现在对话里：积分卡、模型列表卡（点行复制模型 id）、出图卡（直接预览 + 复制路径 + 在文件夹中显示）、视频卡（进度条 → 播放器）、状态卡、配置卡。\n\n## 用户不用记工具名\n\n一句话就行，Agent 会自己挑工具：\n\n- 「还剩多少积分」→ 积分卡\n- 「能生视频的模型有哪些」→ 模型卡\n- 「画一张赛博朋克风格的猫」→ 出图卡\n- 「生成一段 5 秒的海边日落」→ 视频卡（带进度）\n\n六个工具名只在需要显式指定时才会用到，平常用不着记。\n","author":"localWorkspace","github":"https://github.com/wyh1sc/toonflow-connect-workbuddy","configRules":[{"type":"input","field":"proxyUrl","title":"本地服务地址（端口冲突时可改）","value":"http://127.0.0.1:8289","props":{"placeholder":"http://127.0.0.1:8289"}},{"type":"input","field":"outputDir","title":"产物保存目录（工作区相对路径）","value":"assets/generated","props":{"placeholder":"assets/generated"}},{"type":"switch","field":"autoStart","title":"启用内置本地服务","value":true}],"components":["workbuddySetup","workbuddyStatus","workbuddyDrawImage","workbuddyDrawVideo","workbuddyCredits","workbuddyMediaModels"]} */
 /*! toonflowToolClient:{"code":"// WorkBuddy 连接 —— 工具结果卡片（客户端界面）\n// 宿主通过 window.toonflowToolHost 复用同一份 vue 实例，\n// 导出对象形如 { 工具名: Vue 组件 }，挂在 window.toonflowToolViews.workbuddyConnect 上。\n// 注意：本文件会被整段塞进  注释行，源码里禁止出现块注释结束符（星号加斜杠）。\n(function (global, factory) {\n  if (typeof exports === \"object\" && typeof module !== \"undefined\") {\n    module.exports = factory(require(\"vue\"));\n  } else if (typeof define === \"function\" && define.amd) {\n    define([\"vue\"], factory);\n  } else {\n    global = typeof globalThis !== \"undefined\" ? globalThis : global || self;\n    global.toonflowToolViews = global.toonflowToolViews || {};\n    global.toonflowToolViews.workbuddyConnect = factory(global.toonflowToolHost.vue);\n  }\n})(this, function (Vue) {\n  \"use strict\";\n\n  var h = Vue.h;\n  var defineComponent = Vue.defineComponent;\n  var computed = Vue.computed;\n  var ref = Vue.ref;\n\n  var STATUS_TEXT = {\n    running: \"调用中…\",\n    success: \"已完成\",\n    error: \"调用失败\",\n    interrupted: \"已中断\",\n  };\n  var STATUS_CLASS = {\n    running: \"wait\",\n    success: \"ok\",\n    error: \"err\",\n    interrupted: \"muted\",\n  };\n\n  \n\n  var CARD_RE = /<!--wbx:([\\s\\S]*?)-->/;\n\n  function parseCardText(text) {\n    var m = CARD_RE.exec(String(text || \"\"));\n    if (!m) return null;\n    try {\n      var o = JSON.parse(m[1]);\n      return o && typeof o === \"object\" ? o : null;\n    } catch (e) {\n      return null;\n    }\n  }\n\n  function unwrap(raw) {\n    if (raw === undefined || raw === null || raw === \"\") return null;\n    if (typeof raw === \"object\") {\n      return raw.details && typeof raw.details === \"object\" ? raw.details : raw;\n    }\n    var text = String(raw);\n    var fromCard = parseCardText(text);\n    if (fromCard) return fromCard;\n    try {\n      var o = JSON.parse(text);\n      if (o && typeof o === \"object\" && o.details && typeof o.details === \"object\") return o.details;\n      return o;\n    } catch (e) {\n      return null;\n    }\n  }\n\n  function resultOf(tool) {\n    return unwrap(tool && tool.result) || {};\n  }\n\n  function argsOf(tool) {\n    return unwrap(tool && tool.args) || {};\n  }\n\n  \n\n  function fmtNum(v) {\n    var n = Number(v);\n    if (!isFinite(n)) return \"—\";\n    var parts = n.toFixed(2).split(\".\");\n    return parts[0].replace(/\\B(?=(\\d{3})+(?!\\d))/g, \",\") + \".\" + parts[1];\n  }\n\n  function fmtBytes(n) {\n    var b = Number(n);\n    if (!isFinite(b) || b <= 0) return \"\";\n    if (b < 1024) return b + \" B\";\n    if (b < 1024 * 1024) return (b / 1024).toFixed(0) + \" KB\";\n    return (b / 1024 / 1024).toFixed(2) + \" MB\";\n  }\n\n  function baseName(p) {\n    var s = String(p || \"\");\n    var i = Math.max(s.lastIndexOf(\"/\"), s.lastIndexOf(\"\\\\\"));\n    return i >= 0 ? s.slice(i + 1) : s;\n  }\n\n  function fileUrl(directory, path) {\n    if (!directory || !path) return \"\";\n    var dir = typeof directory === \"string\" ? directory : directory.path || \"\";\n    if (!dir) return \"\";\n    return (\n      \"/api/workspaces/files/read?directory=\" + encodeURIComponent(dir) + \"&path=\" + encodeURIComponent(path)\n    );\n  }\n\n  function copyText(text) {\n    try {\n      if (navigator.clipboard && navigator.clipboard.writeText) {\n        navigator.clipboard.writeText(text);\n        return true;\n      }\n    } catch (e) {\n      \n    }\n    try {\n      var ta = document.createElement(\"textarea\");\n      ta.value = text;\n      ta.style.position = \"fixed\";\n      ta.style.opacity = \"0\";\n      document.body.appendChild(ta);\n      ta.select();\n      document.execCommand(\"copy\");\n      document.body.removeChild(ta);\n      return true;\n    } catch (e2) {\n      return false;\n    }\n  }\n\n  function postJson(url, body) {\n    return fetch(url, {\n      method: \"POST\",\n      headers: { \"content-type\": \"application/json\", \"x-toonflow-workspace\": \"1\" },\n      body: JSON.stringify(body || {}),\n    }).then(function (r) {\n      return r.ok;\n    });\n  }\n\n  \n\n  function header(ctx) {\n    return h(\"div\", { class: \"wbx-header\" }, [\n      h(\"div\", { class: \"wbx-logo\" }, ctx.icon || \"W\"),\n      h(\"div\", { class: \"wbx-headBody\" }, [\n        h(\"div\", { class: \"wbx-title\" }, ctx.title || \"\"),\n        ctx.sub ? h(\"div\", { class: \"wbx-sub\" }, ctx.sub) : null,\n      ]),\n      h(\"div\", { class: \"wbx-tags\" }, [\n        ctx.badge ? h(\"span\", { class: \"wbx-tag wbx-tag--info\" }, ctx.badge) : null,\n        h(\n          \"span\",\n          { class: \"wbx-tag wbx-tag--\" + (STATUS_CLASS[ctx.status] || \"muted\") },\n          STATUS_TEXT[ctx.status] || ctx.status || \"\",\n        ),\n      ]),\n    ]);\n  }\n\n  function note(text) {\n    return text ? h(\"p\", { class: \"wbx-note\" }, text) : null;\n  }\n\n  function kv(rows) {\n    return h(\n      \"div\",\n      { class: \"wbx-kv\" },\n      rows.map(function (r) {\n        return h(\"div\", { class: \"wbx-kvRow\" }, [\n          h(\"span\", null, r[0]),\n          h(\"span\", null, r[1] === undefined || r[1] === null || r[1] === \"\" ? \"—\" : String(r[1])),\n        ]);\n      }),\n    );\n  }\n\n  function skeleton(label) {\n    return h(\"div\", { class: \"wbx-skeleton\" }, [h(\"i\", { class: \"wbx-dot\" }), h(\"span\", null, label || \"正在准备…\")]);\n  }\n\n  function btn(text, opts) {\n    opts = opts || {};\n    return h(\n      \"button\",\n      {\n        class: \"wbx-btn\" + (opts.primary ? \" wbx-btn--primary\" : \"\"),\n        type: \"button\",\n        title: opts.title || text,\n        disabled: !!opts.disabled,\n        onClick: opts.onClick,\n      },\n      text,\n    );\n  }\n\n  function cardClass(status) {\n    return \"wbx-card wbx-card--\" + (STATUS_CLASS[status] || \"muted\");\n  }\n\n  \n\n  var CreditsCard = defineComponent({\n    name: \"WorkbuddyCredits\",\n    props: { tool: Object, directory: [String, Object], toolSessionId: String },\n    setup: function (props) {\n      var res = computed(function () {\n        return resultOf(props.tool);\n      });\n      var status = computed(function () {\n        return (props.tool && props.tool.status) || \"\";\n      });\n      var region = computed(function () {\n        return res.value.region === \"global\" ? \"国际区\" : \"国内区\";\n      });\n      return function () {\n        var d = res.value;\n        var ready = status.value === \"success\" && d && d.credits !== undefined;\n        return h(\"div\", { class: cardClass(status.value) }, [\n          header({\n            icon: \"W\",\n            title: \"WorkBuddy 积分\",\n            sub: ready ? [d.nickname || d.uid || \"未知账号\", region.value].join(\" · \") : \"正在查询额度\",\n            badge: d && d.accounts ? d.accounts + \" 个账号\" : \"\",\n            status: status.value,\n          }),\n          ready\n            ? h(\"div\", { class: \"wbx-bigNum\" }, [\n                fmtNum(d.credits),\n                h(\"small\", null, \"积分\"),\n              ])\n            : skeleton(\"正在向账号池查询额度…\"),\n          ready\n            ? kv([\n                [\"最近到期\", d.cycleEnd],\n                [\"账号池合计\", d.poolCredits !== undefined ? fmtNum(d.poolCredits) : \"\"],\n                [\"账号数\", d.accounts],\n              ])\n            : null,\n          note(ready ? \"数据来自本机内置服务 127.0.0.1:\" + (d.port || 8289) : \"\"),\n        ]);\n      };\n    },\n  });\n\n  \n\n  function modelRow(m, kind) {\n    var vg = m.videoGeneration || {};\n    var tags = Array.isArray(m.tags) ? m.tags : [];\n    var chips = tags.map(function (t) {\n      return h(\"span\", { class: \"wbx-chip\" }, t === \"text-to-image\" ? \"文生图\" : t === \"image-to-image\" ? \"图生图\" : t === \"text-to-video\" ? \"文生视频\" : t === \"image-to-video\" ? \"图生视频\" : t);\n    });\n    var meta = \"\";\n    if (kind === \"video\") {\n      meta = [vg.minSeconds && vg.maxSeconds ? vg.minSeconds + \"-\" + vg.maxSeconds + \" 秒\" : \"\", (vg.resolutions || []).join(\"/\")]\n        .filter(Boolean)\n        .join(\" · \");\n    } else if (m.credit != null || m.credits != null) {\n      meta = (m.credit != null ? m.credit : m.credits) + \" 积分\";\n    }\n    return h(\n      \"div\",\n      {\n        class: \"wbx-item\",\n        title: \"点击复制模型 id：\" + m.id,\n        onClick: function () {\n          copyText(m.id);\n        },\n      },\n      [h(\"span\", { class: \"wbx-itemName\" }, m.id)].concat(chips).concat([h(\"span\", { class: \"wbx-itemMeta\" }, meta)]),\n    );\n  }\n\n  var ModelsCard = defineComponent({\n    name: \"WorkbuddyMediaModels\",\n    props: { tool: Object, directory: [String, Object], toolSessionId: String },\n    setup: function (props) {\n      var res = computed(function () {\n        return resultOf(props.tool);\n      });\n      var status = computed(function () {\n        return (props.tool && props.tool.status) || \"\";\n      });\n      var copied = ref(false);\n      return function () {\n        var d = res.value || {};\n        var img = Array.isArray(d.image) ? d.image : [];\n        var vid = Array.isArray(d.video) ? d.video : [];\n        var ready = status.value === \"success\" && (img.length || vid.length);\n        return h(\"div\", { class: cardClass(status.value) }, [\n          header({\n            icon: \"⛁\",\n            title: \"可用媒体模型\",\n            sub: ready ? \"图片 \" + img.length + \" 个 · 视频 \" + vid.length + \" 个\" : \"正在拉取模型目录\",\n            status: status.value,\n          }),\n          ready\n            ? h(\"div\", { class: \"wbx-toolbar\" }, [\n                h(\"span\", null, \"共 \" + (img.length + vid.length) + \" 项\"),\n                copied.value ? h(\"span\", { class: \"wbx-copied\" }, \"已复制\") : null,\n              ])\n            : null,\n          ready\n            ? h(\"div\", { class: \"wbx-list\" }, [].concat(\n                img.length ? [h(\"div\", { class: \"wbx-group\" }, \"图片\")] : [],\n                img.map(function (m) {\n                  return modelRow(m, \"image\");\n                }),\n                vid.length ? [h(\"div\", { class: \"wbx-group\" }, \"视频\")] : [],\n                vid.map(function (m) {\n                  return modelRow(m, \"video\");\n                }),\n              ))\n            : skeleton(\"正在读取 WorkBuddy 模型目录…\"),\n          note(ready ? \"点任意一行复制模型 id\" : \"\"),\n        ]);\n      };\n    },\n  });\n\n  \n\n  var ImageCard = defineComponent({\n    name: \"WorkbuddyDrawImage\",\n    props: { tool: Object, directory: [String, Object], toolSessionId: String },\n    setup: function (props) {\n      var res = computed(function () {\n        return resultOf(props.tool);\n      });\n      var status = computed(function () {\n        return (props.tool && props.tool.status) || \"\";\n      });\n      var hint = ref(\"\");\n      var files = computed(function () {\n        var f = res.value && res.value.files;\n        return Array.isArray(f) ? f : [];\n      });\n      function reveal(path) {\n        postJson(\"/api/workspaces/files/reveal\", {\n          directory: typeof props.directory === \"string\" ? props.directory : \"\",\n          path: path,\n        }).then(function (ok) {\n          hint.value = ok ? \"\" : \"打开失败：可能不在工作区内\";\n        });\n      }\n      return function () {\n        var d = res.value || {};\n        var fs = files.value;\n        var ready = status.value === \"success\" && fs.length > 0;\n        var sub = [d.model, d.size, d.credit != null ? d.credit + \" 积分\" : \"\"].filter(Boolean).join(\" · \");\n        return h(\"div\", { class: cardClass(status.value) }, [\n          header({\n            icon: \"▣\",\n            title: ready ? \"出图完成\" : \"生成图片\",\n            sub: sub || \"正在生成\",\n            status: status.value,\n          }),\n          ready\n            ? h(\n                \"div\",\n                { class: \"wbx-media\" },\n                fs.map(function (f) {\n                  var url = fileUrl(props.directory, f.path);\n                  return url\n                    ? h(\"img\", { class: \"wbx-img\", src: url, alt: baseName(f.path), loading: \"lazy\" })\n                    : h(\"div\", { class: \"wbx-mediaFallback\" }, baseName(f.path));\n                }),\n              )\n            : skeleton(\"正在出图，通常十几秒…\"),\n          ready\n            ? h(\n                \"div\",\n                { class: \"wbx-dest\" },\n                fs.map(function (f) {\n                  return h(\"code\", { title: f.path }, f.path);\n                }),\n              )\n            : null,\n          ready\n            ? h(\"div\", { class: \"wbx-actions\" }, [\n                btn(\"复制路径\", {\n                  primary: true,\n                  onClick: function () {\n                    hint.value = copyText(fs.map(function (f) { return f.path; }).join(\"\\n\")) ? \"已复制\" : \"复制失败\";\n                  },\n                }),\n                btn(\"在文件夹中显示\", {\n                  onClick: function () {\n                    reveal(fs[0].path);\n                  },\n                }),\n                fs[0] && fs[0].bytes ? h(\"span\", { class: \"wbx-foot\" }, fmtBytes(fs[0].bytes)) : null,\n              ])\n            : null,\n          hint.value ? note(hint.value) : note(ready ? \"\" : \"\"),\n        ]);\n      };\n    },\n  });\n\n  \n\n  var VideoCard = defineComponent({\n    name: \"WorkbuddyDrawVideo\",\n    props: { tool: Object, directory: [String, Object], toolSessionId: String },\n    setup: function (props) {\n      var args = computed(function () {\n        return argsOf(props.tool);\n      });\n      var res = computed(function () {\n        return resultOf(props.tool);\n      });\n      var status = computed(function () {\n        return (props.tool && props.tool.status) || \"\";\n      });\n      var hint = ref(\"\");\n      var files = computed(function () {\n        var f = res.value && res.value.files;\n        return Array.isArray(f) ? f : [];\n      });\n      return function () {\n        var d = res.value || {};\n        var a = args.value || {};\n        var fs = files.value;\n        var running = status.value === \"running\";\n        var ready = status.value === \"success\" && fs.length > 0;\n        var sub = [d.model || a.model, d.seconds || a.seconds ? (d.seconds || a.seconds) + \" 秒\" : \"\", d.resolution || a.resolution]\n          .filter(Boolean)\n          .join(\" · \");\n        return h(\"div\", { class: cardClass(status.value) }, [\n          header({\n            icon: \"▶\",\n            title: ready ? \"视频生成完成\" : running ? \"正在生成视频\" : \"生成视频\",\n            sub: sub || \"异步任务\",\n            status: status.value,\n          }),\n          running ? h(\"div\", { class: \"wbx-bar\" }, [h(\"i\", null)]) : null,\n          running ? h(\"p\", { class: \"wbx-note\" }, \"异步任务，通常 1-6 分钟，完成后这里会变成播放器。\") : null,\n          ready\n            ? h(\n                \"div\",\n                { class: \"wbx-media\" },\n                fs.map(function (f) {\n                  var url = fileUrl(props.directory, f.path);\n                  return url\n                    ? h(\"video\", { class: \"wbx-video\", src: url, controls: true, preload: \"metadata\" })\n                    : h(\"div\", { class: \"wbx-mediaFallback\" }, baseName(f.path));\n                }),\n              )\n            : null,\n          ready\n            ? h(\n                \"div\",\n                { class: \"wbx-dest\" },\n                fs.map(function (f) {\n                  return h(\"code\", { title: f.path }, f.path);\n                }),\n              )\n            : null,\n          ready\n            ? h(\"div\", { class: \"wbx-actions\" }, [\n                btn(\"复制路径\", {\n                  primary: true,\n                  onClick: function () {\n                    hint.value = copyText(fs.map(function (f) { return f.path; }).join(\"\\n\")) ? \"已复制\" : \"复制失败\";\n                  },\n                }),\n                fs[0] && fs[0].bytes ? h(\"span\", { class: \"wbx-foot\" }, fmtBytes(fs[0].bytes)) : null,\n              ])\n            : null,\n          d && d.taskId ? note(\"任务 \" + d.taskId) : hint.value ? note(hint.value) : null,\n        ]);\n      };\n    },\n  });\n\n  \n\n  var StatusCard = defineComponent({\n    name: \"WorkbuddyStatus\",\n    props: { tool: Object, directory: [String, Object], toolSessionId: String },\n    setup: function (props) {\n      var res = computed(function () {\n        return resultOf(props.tool);\n      });\n      var status = computed(function () {\n        return (props.tool && props.tool.status) || \"\";\n      });\n      return function () {\n        var d = res.value || {};\n        var srv = d.server || {};\n        var bal = d.balance || {};\n        var ready = status.value === \"success\";\n        return h(\"div\", { class: cardClass(status.value) }, [\n          header({\n            icon: \"◎\",\n            title: \"WorkBuddy 状态\",\n            sub: srv.ok ? \"本地服务 127.0.0.1:\" + srv.port + (srv.own ? \"（内置）\" : \"（复用）\") : \"服务未启动\",\n            status: status.value,\n          }),\n          ready\n            ? kv([\n                [\"本地服务\", srv.ok ? \"127.0.0.1:\" + srv.port : srv.error || \"未启动\"],\n                [\"当前账号\", bal.nickname || bal.uid],\n                [\"剩余积分\", bal.credits !== undefined ? fmtNum(bal.credits) : \"\"],\n                [\"账号池合计\", bal.poolCredits !== undefined ? fmtNum(bal.poolCredits) : \"\"],\n                [\"账号数\", bal.accounts],\n              ])\n            : skeleton(\"正在检查服务与账号…\"),\n          note(ready ? \"\" : \"\"),\n        ]);\n      };\n    },\n  });\n\n  \n\n  var SetupCard = defineComponent({\n    name: \"WorkbuddySetup\",\n    props: { tool: Object, directory: [String, Object], toolSessionId: String },\n    setup: function (props) {\n      var res = computed(function () {\n        return resultOf(props.tool);\n      });\n      var status = computed(function () {\n        return (props.tool && props.tool.status) || \"\";\n      });\n      return function () {\n        var d = res.value || {};\n        var srv = d.server || {};\n        var ready = status.value === \"success\";\n        var ok = ready && srv.ok && (d.models || d.accounts);\n        return h(\"div\", { class: cardClass(ok ? status.value : ready ? \"error\" : status.value) }, [\n          header({\n            icon: \"⚙\",\n            title: \"WorkBuddy 配置\",\n            sub: srv.ok ? \"服务已就绪 · 模型 \" + (d.models || 0) + \" 个\" : \"正在初始化\",\n            status: ok || !ready ? status.value : \"error\",\n          }),\n          ready\n            ? kv([\n                [\"本地服务\", srv.ok ? \"127.0.0.1:\" + srv.port : srv.error || \"未启动\"],\n                [\"可用账号\", d.accounts != null ? d.accounts + \" 个\" : \"\"],\n                [\"写入模型\", d.models != null ? d.models + \" 个\" : \"未写入\"],\n                [\"Toonflow\", d.tfPort ? \"端口 \" + d.tfPort : \"未发现\"],\n              ])\n            : skeleton(\"正在发现凭据并启动服务…\"),\n          ready && ok ? note(\"已写入 model provider，去「设置 → 模型供应商 → WorkBuddy」挑模型即可。\") : null,\n          ready && !ok ? note(\"没自动完成：确认本机装了并登录 WorkBuddy 桌面端，或设置环境变量 CODEBUDDY_AUTH_TOKEN。\") : null,\n        ]);\n      };\n    },\n  });\n\n  return {\n    workbuddyCredits: CreditsCard,\n    workbuddyMediaModels: ModelsCard,\n    workbuddyDrawImage: ImageCard,\n    workbuddyDrawVideo: VideoCard,\n    workbuddyStatus: StatusCard,\n    workbuddySetup: SetupCard,\n  };\n});\n","css":"\n\n\n.wbx-card {\n  box-sizing: border-box;\n  border: 1px solid var(--el-border-color-lighter, #e5e7eb);\n  background: var(--el-bg-color, #fff);\n  color: var(--el-text-color-primary, #1f2937);\n  border-radius: 14px;\n  padding: 15px 17px 13px;\n  font-size: 0.875rem;\n  line-height: 1.6;\n  max-width: 560px;\n  overflow: hidden;\n}\n.wbx-card--err {\n  border-color: var(--el-color-danger-light-5, #f7bcbc);\n}\n\n\n.wbx-header {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n}\n.wbx-logo {\n  width: 30px;\n  height: 30px;\n  flex: none;\n  border-radius: 9px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-size: 15px;\n  font-weight: 700;\n  color: #fff;\n  background: linear-gradient(135deg, #2f6bff, #7a4bff);\n  user-select: none;\n}\n.wbx-headBody {\n  display: flex;\n  flex-direction: column;\n  min-width: 0;\n}\n.wbx-title {\n  font-size: 0.9375rem;\n  font-weight: 600;\n  letter-spacing: 0.0125rem;\n}\n.wbx-sub {\n  color: var(--el-text-color-secondary, #6b7280);\n  font-size: 0.75rem;\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n.wbx-tags {\n  margin-left: auto;\n  flex: none;\n  display: flex;\n  align-items: center;\n  gap: 6px;\n}\n.wbx-tag {\n  border-radius: 5px;\n  padding: 2px 8px;\n  font-size: 0.6875rem;\n  line-height: 1.1rem;\n  white-space: nowrap;\n}\n.wbx-tag--ok {\n  background: var(--el-color-success-light-9, #e8f8ef);\n  color: var(--el-color-success, #16a34a);\n}\n.wbx-tag--wait {\n  background: var(--el-color-warning-light-9, #fdf5e6);\n  color: var(--el-color-warning, #b45309);\n}\n.wbx-tag--err {\n  background: var(--el-color-danger-light-9, #fdeeee);\n  color: var(--el-color-danger, #dc2626);\n}\n.wbx-tag--info,\n.wbx-tag--muted {\n  background: var(--el-fill-color, #eef0f3);\n  color: var(--el-text-color-secondary, #6b7280);\n}\n\n\n.wbx-bigNum {\n  margin: 15px 0 2px;\n  font-size: 29px;\n  font-weight: 700;\n  letter-spacing: -0.01em;\n  font-variant-numeric: tabular-nums;\n}\n.wbx-bigNum small {\n  font-size: 13px;\n  font-weight: 500;\n  color: var(--el-text-color-secondary, #6b7280);\n  margin-left: 6px;\n}\n\n\n.wbx-kv {\n  margin-top: 12px;\n  background: var(--el-fill-color-light, #f6f7f9);\n  border-radius: 10px;\n  padding: 9px 12px;\n}\n.wbx-kvRow {\n  display: flex;\n  justify-content: space-between;\n  gap: 12px;\n  font-size: 0.8125rem;\n  padding: 3px 0;\n}\n.wbx-kvRow > span:first-child {\n  color: var(--el-text-color-secondary, #6b7280);\n  flex: none;\n}\n.wbx-kvRow > span:last-child {\n  font-variant-numeric: tabular-nums;\n  text-align: right;\n  min-width: 0;\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n\n\n.wbx-toolbar {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  margin-top: 12px;\n  padding: 0 2px;\n  font-size: 0.75rem;\n  color: var(--el-text-color-secondary, #6b7280);\n}\n.wbx-copied {\n  color: var(--el-color-success, #16a34a);\n}\n.wbx-list {\n  background: var(--el-fill-color-light, #f6f7f9);\n  border-radius: 10px;\n  margin-top: 8px;\n  padding: 6px;\n  max-height: 46vh;\n  overflow-y: auto;\n}\n.wbx-group {\n  padding: 6px 8px 3px;\n  font-size: 0.6875rem;\n  color: var(--el-text-color-secondary, #6b7280);\n  letter-spacing: 0.04em;\n}\n.wbx-item {\n  display: flex;\n  align-items: center;\n  gap: 7px;\n  padding: 6px 8px;\n  border-radius: 8px;\n  font-size: 0.8125rem;\n  cursor: pointer;\n}\n.wbx-item:hover {\n  background: var(--el-fill-color, #eef0f3);\n}\n.wbx-itemName {\n  font-weight: 500;\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n.wbx-chip {\n  flex: none;\n  background: var(--el-fill-color, #eef0f3);\n  color: var(--el-text-color-secondary, #6b7280);\n  border-radius: 4px;\n  padding: 1px 6px;\n  font-size: 0.6875rem;\n  line-height: 1rem;\n  white-space: nowrap;\n}\n.wbx-itemMeta {\n  margin-left: auto;\n  flex: none;\n  font-size: 0.75rem;\n  color: var(--el-text-color-secondary, #6b7280);\n  font-variant-numeric: tabular-nums;\n  opacity: 0.8;\n  white-space: nowrap;\n}\n\n\n.wbx-media {\n  margin-top: 13px;\n  border-radius: 10px;\n  overflow: hidden;\n  background: var(--el-fill-color-light, #f6f7f9);\n}\n.wbx-img,\n.wbx-video {\n  display: block;\n  width: 100%;\n  height: auto;\n  max-height: 420px;\n  object-fit: contain;\n  background: var(--el-fill-color-light, #f6f7f9);\n}\n.wbx-mediaFallback {\n  padding: 28px 12px;\n  text-align: center;\n  font-size: 0.75rem;\n  color: var(--el-text-color-secondary, #6b7280);\n}\n\n\n.wbx-dest {\n  display: flex;\n  flex-direction: column;\n  gap: 4px;\n  margin-top: 11px;\n  padding: 8px 12px;\n  background: var(--el-fill-color-light, #f6f7f9);\n  border-radius: 9px;\n  font-size: 0.8125rem;\n}\n.wbx-dest code {\n  font-family: ui-monospace, Consolas, Menlo, monospace;\n  font-size: 0.75rem;\n  color: var(--el-text-color-regular, #4b5563);\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n\n\n.wbx-actions {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  margin-top: 13px;\n}\n.wbx-btn {\n  border: 1px solid var(--el-border-color-lighter, #e5e7eb);\n  background: transparent;\n  color: var(--el-text-color-primary, #1f2937);\n  border-radius: 8px;\n  padding: 5px 13px;\n  font-size: 0.8125rem;\n  line-height: 1.4;\n  cursor: pointer;\n  transition: background-color 0.15s;\n}\n.wbx-btn:hover {\n  background: var(--el-fill-color-light, #f6f7f9);\n}\n.wbx-btn--primary {\n  background: var(--el-color-primary, #2f6bff);\n  border-color: var(--el-color-primary, #2f6bff);\n  color: #fff;\n}\n.wbx-btn--primary:hover {\n  background: var(--el-color-primary-light-3, #5b8bff);\n  border-color: var(--el-color-primary-light-3, #5b8bff);\n}\n.wbx-foot {\n  margin-left: auto;\n  font-size: 0.75rem;\n  color: var(--el-text-color-secondary, #6b7280);\n  font-variant-numeric: tabular-nums;\n}\n\n\n.wbx-bar {\n  margin-top: 14px;\n  height: 6px;\n  border-radius: 99px;\n  background: var(--el-fill-color-light, #f6f7f9);\n  overflow: hidden;\n}\n.wbx-bar > i {\n  display: block;\n  height: 100%;\n  width: 40%;\n  border-radius: 99px;\n  background: linear-gradient(90deg, #2f6bff, #7a4bff);\n  animation: wbx-slide 1.3s ease-in-out infinite;\n}\n@keyframes wbx-slide {\n  0% {\n    transform: translateX(-100%);\n  }\n  100% {\n    transform: translateX(260%);\n  }\n}\n\n\n.wbx-skeleton {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  margin-top: 14px;\n  padding: 12px;\n  border-radius: 10px;\n  background: var(--el-fill-color-light, #f6f7f9);\n  font-size: 0.8125rem;\n  color: var(--el-text-color-secondary, #6b7280);\n}\n.wbx-dot {\n  width: 7px;\n  height: 7px;\n  border-radius: 50%;\n  background: var(--el-color-primary, #2f6bff);\n  animation: wbx-pulse 1s ease-in-out infinite;\n}\n@keyframes wbx-pulse {\n  0%,\n  100% {\n    opacity: 0.25;\n  }\n  50% {\n    opacity: 1;\n  }\n}\n.wbx-note {\n  margin: 9px 2px 0;\n  font-size: 0.75rem;\n  color: var(--el-text-color-secondary, #94a3b8);\n  white-space: pre-wrap;\n  overflow-wrap: anywhere;\n}\n"} */
 import { z } from "toonflow:tool-zod";
 import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
@@ -677,6 +677,178 @@ const POOL = {
     };
   },
 };
+
+/* ============================ 扫码登录（OAuth） ============================
+ * 不依赖桌面端给账号池加号：向 {billing}/v2/plugin/auth/state 申请一个 state，
+ * 用户在浏览器打开 authUrl 完成登录，这边轮询 /v2/plugin/auth/token?state= 换
+ * 凭据，拿到 accessToken 后调 /v2/plugin/login/account 补全 uid/昵称。
+ *
+ * 会话只存在进程内存里（OAUTH_SESSIONS），重启即作废 —— 和上游实现一致：
+ * state 是上游的一次性 CSRF 绑定值，落盘没有意义。
+ */
+const OAUTH_PREFIX = "/v2/plugin";
+const OAUTH_TIMEOUT_MS = 10 * 60 * 1000;
+// loginId -> { region, base, state, expiresAt, done, result, error }
+const OAUTH_SESSIONS = new Map();
+
+function oauthBaseOf(region, explicit) {
+  if (region === "global") {
+    const t = String(explicit || "").trim();
+    return (t || GLOBAL_BILLING).replace(/\/+$/, "");
+  }
+  return CN_BILLING.replace(/\/+$/, "");
+}
+
+function firstStr(src, keys) {
+  for (const k of keys) {
+    const v = src?.[k];
+    if (typeof v === "string" && v.trim()) return v.trim();
+    if (typeof v === "number" && Number.isFinite(v)) return String(v);
+  }
+  return "";
+}
+
+// 到期时间可能是绝对毫秒/秒，也可能是相对秒数（expiresIn），两种都吃。
+function expiryToMs(src, absKeys, ttlKeys) {
+  for (const k of absKeys) {
+    const v = src?.[k];
+    const n = typeof v === "number" ? v : Number(v);
+    if (Number.isFinite(n) && n > 0) return n > 1e12 ? n : n * 1000;
+  }
+  for (const k of ttlKeys) {
+    const v = src?.[k];
+    const n = typeof v === "number" ? v : Number(v);
+    if (Number.isFinite(n) && n > 0) return Date.now() + n * 1000;
+  }
+  return 0;
+}
+
+// 发起一次登录，返回要用户打开/扫的地址。
+async function oauthStart(region, explicitBase) {
+  const base = oauthBaseOf(region, explicitBase);
+  const { status, body } = await httpJson(
+    `${base}${OAUTH_PREFIX}/auth/state?platform=workbuddy`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json", "User-Agent": CATALOG_UA },
+      body: "{}",
+    },
+    30000,
+  );
+  const d = body?.data || {};
+  const state = firstStr(d, ["state", "State"]);
+  if (!state) {
+    return { ok: false, message: `上游没发 state（HTTP ${status}）${String(body?.msg || "").slice(0, 80)}`.trim() };
+  }
+  const authUrl = firstStr(d, ["authUrl", "auth_url", "url", "Url"]) || `${base}/login?state=${encodeURIComponent(state)}`;
+  const loginId = `wbo_${randomUUID().replace(/-/g, "")}`;
+  OAUTH_SESSIONS.set(loginId, {
+    region,
+    base,
+    state,
+    expiresAt: Date.now() + OAUTH_TIMEOUT_MS,
+    done: false,
+    result: null,
+    error: "",
+  });
+  return { ok: true, loginId, authUrl, expiresIn: Math.round(OAUTH_TIMEOUT_MS / 1000), region };
+}
+
+// 拿 token 后补全账号资料，组装成能直接进 vault 的形状。
+async function oauthCollect(session, accessToken, tokenData) {
+  const domain = firstStr(tokenData, ["domain", "Domain"]);
+  const headers = { Authorization: `Bearer ${accessToken}`, Accept: "application/json" };
+  if (domain) headers["X-Domain"] = domain;
+  let prof = {};
+  try {
+    const r = await httpJson(`${session.base}${OAUTH_PREFIX}/login/account`, { method: "GET", headers }, 30000);
+    prof = r.body?.data || {};
+  } catch {
+    /* 资料只是显示用，拿不到不算失败 —— uid 后面还有兜底 */
+  }
+  return {
+    accessToken,
+    refreshToken: firstStr(tokenData, ["refreshToken", "refresh_token", "RefreshToken"]),
+    expiresAtMs: expiryToMs(tokenData, ["expiresAt", "expires_at"], ["expiresIn", "expires_in"]),
+    refreshExpiresAtMs: expiryToMs(tokenData, ["refreshExpiresAt", "refresh_expires_at"], ["refreshExpiresIn", "refresh_expires_in"]),
+    domain: domain || firstStr(prof, ["domain", "Domain"]),
+    uid: firstStr(prof, ["uid", "Uid", "userId", "UserID"]),
+    nickname: firstStr(prof, ["nickname", "NickName", "ScreenName"]),
+    uin: firstStr(prof, ["uin", "Uin"]),
+  };
+}
+
+// 轮询一次。只有当 code 是 0/200 且带 accessToken 才算完成；
+// code 11217 = login ing...（还没扫）、其它业务码也当「还没好」。
+async function oauthPoll(loginId, region) {
+  const s = OAUTH_SESSIONS.get(loginId);
+  if (!s) return { done: true, ok: false, message: "登录会话不存在，请重新发起" };
+  if (region && s.region !== region) return { done: true, ok: false, message: "会话属于另一个区域" };
+  if (s.done) return s.result ? { done: true, ok: true, account: s.result } : { done: true, ok: false, message: s.error || "登录已结束" };
+  if (Date.now() > s.expiresAt) {
+    s.done = true;
+    s.error = "登录超时，请重新发起";
+    OAUTH_SESSIONS.delete(loginId);
+    return { done: true, ok: false, message: s.error };
+  }
+  let status = 0;
+  let body = null;
+  try {
+    const r = await httpJson(
+      `${s.base}${OAUTH_PREFIX}/auth/token?state=${encodeURIComponent(s.state)}`,
+      { method: "GET", headers: { Accept: "application/json", "User-Agent": CATALOG_UA } },
+      30000,
+    );
+    status = r.status;
+    body = r.body;
+  } catch {
+    // 网络抖一下不等于登录死了，用户可能还在扫码，等下一次轮询。
+    return { done: false, pending: true, code: 0, message: "登录中…" };
+  }
+  const code = typeof body?.code === "number" ? body.code : -1;
+  if (code !== 0 && code !== 200) {
+    return { done: false, pending: true, code, message: String(body?.msg || "登录中…") };
+  }
+  const d = body?.data || {};
+  const accessToken = firstStr(d, ["accessToken", "access_token", "AccessToken"]);
+  if (!accessToken) return { done: false, pending: true, code, message: String(body?.msg || "登录中…") };
+
+  s.done = true;
+  try {
+    const account = await oauthCollect(s, accessToken, d);
+    OAUTH_SESSIONS.delete(loginId);
+    s.result = account;
+    return { done: true, ok: true, account };
+  } catch (err) {
+    s.error = String(err?.message || err);
+    OAUTH_SESSIONS.delete(loginId);
+    return { done: true, ok: false, message: s.error };
+  }
+}
+
+// 把扫码拿到的账号写进插件自己的凭据库，并立刻刷新账号池。
+async function oauthCommit(account) {
+  const region = domainRegion(account.domain);
+  const cred = {
+    accountId: account.uid,
+    token: account.accessToken,
+    refreshToken: account.refreshToken || "",
+    expiresAt: account.expiresAtMs || 0,
+    refreshExpiresAt: account.refreshExpiresAtMs || 0,
+    domain: account.domain || "",
+    uid: account.uid,
+    nickname: account.nickname || "",
+    uin: account.uin || "",
+    source: "oauth",
+  };
+  await persistCredentials([cred]);
+  const d = await discoverCredentials();
+  const n = await POOL.scan(d.creds);
+  const acc = POOL.accounts.find((a) => a.uid === cred.uid);
+  if (acc) await refreshCredits(acc, true);
+  await POOL.saveState();
+  return { ok: true, uid: cred.uid, nickname: cred.nickname, region, count: n, snapshot: POOL.snapshot() };
+}
 
 /* ============================ 上游调用 ============================ */
 
@@ -1605,6 +1777,25 @@ async function handlePoolRoute(path, req) {
       await POOL.saveState();
     }
     return json({ ok: true, snapshot: POOL.snapshot() });
+  }
+  // 扫码登录：发起 → 前端展示二维码/链接 → 轮询 → 提交入池
+  if (path.endsWith("/login/start")) {
+    const body = await req.json().catch(() => ({}));
+    const region = body.region === "global" ? "global" : "cn";
+    const r = await oauthStart(region, body.base);
+    return json(r, r.ok ? 200 : 400);
+  }
+  if (path.endsWith("/login/poll")) {
+    const body = await req.json().catch(() => ({}));
+    const r = await oauthPoll(String(body.loginId || ""), body.region === "global" ? "global" : "cn");
+    return json(r);
+  }
+  if (path.endsWith("/login/commit")) {
+    const body = await req.json().catch(() => ({}));
+    const a = body.account || {};
+    if (!a.accessToken || !a.uid) return json({ ok: false, message: "缺少 accessToken 或 uid" }, 400);
+    const r = await oauthCommit(a);
+    return json(r);
   }
   if (path.endsWith("/checkin")) {
     const body = await req.json().catch(() => ({}));
