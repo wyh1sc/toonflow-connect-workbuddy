@@ -121,11 +121,12 @@ ELECTRON_RUN_AS_NODE=1 WorkBuddy.exe -e "process.stdout.write(process._linkedBin
 
 **v2 起是单文件自包含的**（13.0 万字节 / 2471 行）：模块顶层自动起 `Bun.serve`，内置凭据发现、AES-256-GCM 解密、账号池轮换、模型目录、文本对话聚合、生图、生视频异步任务。装进 Toonflow 后不需要任何外部进程。
 
-六个工具，每个都带一张卡片界面（见下节）：
+七个工具（前六个各带一张卡片界面，见下节；`workbuddyAddAccount` 只回文本）：
 
 | 工具 | 说明 |
 |---|---|
 | `workbuddySetup` | 一次性配置：发现凭据 → 起服务 → 把文本模型写进 Toonflow 供应商 |
+| `workbuddyAddAccount` | **扫码加账号**，纯对话，不依赖任何界面脚本（详见下节） |
 | `workbuddyStatus` | 本地服务端口、账号数、凭据来源 |
 | `workbuddyDrawImage` | 文生图 / 图生图，同步返回，几十秒 |
 | `workbuddyDrawVideo` | 文生视频 / 图生视频，异步任务自动轮询到完成 |
@@ -170,6 +171,21 @@ ELECTRON_RUN_AS_NODE=1 WorkBuddy.exe -e "process.stdout.write(process._linkedBin
 
 > 模型下拉上的「· 暂不可用 / · 异常」标签走的是**另一条轻量探测**（`probeOne`，1 token），不会花额度。
 
+### 加账号：扫码登录，不用面板脚本（v2.4 起）
+
+账号池里的号从哪来？三条自动路径（`discoverCredentials()`）：WorkBuddy 桌面端登录态、`~/.dsh/workbuddy-vault/*`、`~/.toonflow-workbuddy/vault/*`；外加环境变量 `CODEBUDDY_AUTH_TOKEN`。
+
+但**别人的号不在你机器上**，所以给了扫码入口 —— 而且它是个对话工具，不装 `panel/` 里的注入脚本也能用：
+
+> 你：「加个账号」 / 「再来一个号」 / 「额度不够了换个号」
+> Agent 调 `workbuddyAddAccount` → 回一条链接：`https://www.workbuddy.cn/login?platform=workbuddy&state=…`
+
+拿**要添加的那个账号**在浏览器（或手机）打开这条链接，登录完回来说一句「好了」，Agent 带 `loginId` 再调一次，最多等 120 秒，拿到 token 就落进 `vault/` 并进池。会话 10 分钟过期，过期重新发起一次即可。
+
+参数：`region`（`cn` 默认 / `global`）、`loginId`（续等上一次登录）、`waitSeconds`（默认 60，上限 120）。
+
+装了面板脚本的话，账号池面板上的「扫码添加账号」按钮做的是同一件事，只是带二维码图片。两个入口共用后端 `/pool/login/{start,poll,commit}` 三条路由。
+
 ### 用户不用记工具名
 
 插件元数据里的 `prompt` 字段会被 Toonflow 注入到 Agent 的系统提示里，Agent 自己知道什么场景该调哪个工具。**用户说人话就行**：
@@ -182,6 +198,7 @@ ELECTRON_RUN_AS_NODE=1 WorkBuddy.exe -e "process.stdout.write(process._linkedBin
 | 改图 | 「把这张图改成夜景」（附参考图） |
 | 生视频 | 「生成一段 5 秒的海边日落视频」 |
 | 首次配置 | 「配置一下 WorkBuddy」「插件好像没连上」 |
+| 加账号 | 「加个账号」「再来一个号」→ 回一条登录链接，登录完说「好了」 |
 
 真机实测：只发「帮我看看还剩多少积分」，没有出现任何工具名，Agent 自己调了 `workbuddyCredits`，冒出积分卡（`2,447.30 积分 / 账号池合计 14,220.06 / 6 个账号`）并附一句总结。
 
