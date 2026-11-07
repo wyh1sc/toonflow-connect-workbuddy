@@ -34,7 +34,11 @@ SRC_CSS = os.path.join(HERE, "src", "index.css")
 TOOL = os.path.join(ROOT, "tool", "workbuddyConnect.tool.js")
 BUN_CANDIDATES = [
     os.environ.get("BUN_EXE", ""),
+    # Toonflow 自带 bun.exe，但安装目录可能被改名/改盘，按顺序试几个已知位置
+    r"E:\Toonflow\Toonflow\stable\app\bin\bun.exe",
     r"E:\local.toonflow.desktop\local.toonflow.desktop\stable\app\bin\bun.exe",
+    os.path.join(os.environ.get("LOCALAPPDATA") or "", "Toonflow", "stable", "app", "bin", "bun.exe"),
+    os.path.join(os.environ.get("LOCALAPPDATA") or "", "toonflow", "stable", "app", "bin", "bun.exe"),
     "bun",
 ]
 

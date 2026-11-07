@@ -2249,7 +2249,7 @@ function toonflowRoots() {
     }
   }
   roots.push(join(HOME_DIR, "toonflow"));
-  // 注册表兜底：Toonflow 可装在任意盘（本机就是 E:\local.toonflow.desktop\...\stable）
+  // 注册表兜底：Toonflow 可装在任意盘、任意目录名（本机现在是 E:\Toonflow\Toonflow\stable）
   for (const r of registryToonflowRoots()) roots.push(r);
   return roots;
 }
