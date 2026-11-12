@@ -119,7 +119,7 @@ ELECTRON_RUN_AS_NODE=1 WorkBuddy.exe -e "process.stdout.write(process._linkedBin
 
 ### `tool/workbuddyConnect.tool.js`
 
-**v2 起是单文件自包含的**（13.0 万字节 / 2471 行）：模块顶层自动起 `Bun.serve`，内置凭据发现、AES-256-GCM 解密、账号池轮换、模型目录、文本对话聚合、生图、生视频异步任务。装进 Toonflow 后不需要任何外部进程。
+**v2 起是单文件自包含的**（15.0 万字节 / 2868 行）：模块顶层自动起 `Bun.serve`，内置凭据发现、AES-256-GCM 解密、账号池轮换、模型目录、文本对话聚合、生图、生视频异步任务。装进 Toonflow 后不需要任何外部进程。
 
 七个工具（前六个各带一张卡片界面，见下节；`workbuddyAddAccount` 只回文本）：
 
@@ -138,6 +138,7 @@ ELECTRON_RUN_AS_NODE=1 WorkBuddy.exe -e "process.stdout.write(process._linkedBin
 - `proxyUrl`，默认 `http://127.0.0.1:8289`（内置服务地址；端口被占时会自动顺延，实际值写进 `~/.toonflow-workbuddy/port.txt`）
 - `outputDir`，默认 `assets/generated`，必须是工作区内的相对路径
 - `autoStart`，默认开
+- `dropHistoryThinking`，默认关。开了之后回传给上游的历史 assistant 消息只留 `content`，把上一轮的 `reasoning_content`（思考过程）剥掉——省 token，也少一截容易被网关关键字扫描的文本。自己这一轮新生成的思考照常返回给客户端，不影响当次对话。
 
 ### 账号池：挑号、换号、签到、测试（v2.2 起）
 
@@ -154,7 +155,7 @@ ELECTRON_RUN_AS_NODE=1 WorkBuddy.exe -e "process.stdout.write(process._linkedBin
 | `POST /pool/checkin` | 签到，`{uid}` 单个或 `{}` 全部；**幂等**，已签到的直接标「已签到」，不发写入请求 |
 | `POST /pool/test` | **体积探测**：真发一次 25k token 请求，能探出限流（约 0.02 积分） |
 
-三条关键行为，都是照上游实测结论定的：
+四条关键行为，都是照上游实测结论定的：
 
 **① 挑号是五键全序**（`POOL.rank()`）：可用（不在冷却）优先 → 积分高（只用 10 分钟内的新鲜读数，挑号路径不打上游）→ 3 天内到期的积分包优先 → 凭据更晚过期优先 → uid 收尾保证可复现。固定账号模式下直接命中 `fixedUid`。
 
@@ -168,6 +169,8 @@ ELECTRON_RUN_AS_NODE=1 WorkBuddy.exe -e "process.stdout.write(process._linkedBin
 | `5xx` 网关 | |
 
 **③ 限流按请求体积触发，重置时间藏在响应体里**。上游 429 不带 `Retry-After`，而是回 `{"code":6004,"msg":"…将在 2026-09-30 02:30:30 UTC+8 重置…"}`。`parseResetAt()` 按声明里的 UTC 偏移换算成冷却时长；解析不出来就 30 分钟兜底。这也是「测试」必须发真实体积的原因——ping 一个 `max_tokens:1` 根本探不出限流。
+
+**④ 签到读数是「当天的」，不跨天沿用**。签到按北京时间自然日算（`todayKey()` 用 `Date.now()+8h` 取日期），库里存的是 `{checkinDay, checkin: {uid: {checkedIn, streak, at}}}`。跨过 0 点以后昨天那张表整体作废：`applyCheckinState()` 会把账号上的 `checkedIn` 清成 `null`，`snapshot()` 也只在「表是今天的、且这条记录的 `at` 也是今天的」（`checkinToday(acc)`）时才回真实状态。所以面板不会把昨天的「已签到」一直挂到下一次真实查询——没读过就是未签到，`checkedIn: null` 走 `a.checkedIn ? … : …` 的否分支。
 
 > 模型下拉上的「· 暂不可用 / · 异常」标签走的是**另一条轻量探测**（`probeOne`，1 token），不会花额度。
 
@@ -389,6 +392,19 @@ python scripts/install_tool_plugin.py
 - **产物 URL 有效期 24 小时**：是 COS 签名链接，本插件会落盘到工作区，别把链接当长期地址。
 - **尺寸上限约 419 万像素**：`2048x2048` 通过，`2560x2560` 拒。
 - **模型繁忙**：上游偶发 `429 Model busy`，与网络无关，换模型或等 30 秒重试。
+
+---
+
+## 更新日志
+
+### v2.4.5
+
+两条都是从上游 [dsh-connect-workbuddy](https://github.com/dingminhua/dsh-connect-workbuddy) 同期改动里挑出来的、对本插件同样成立的修复：
+
+- **签到跨 0 点**（对应上游 5.21.1 / issue #232）。之前跨天后 `checkinDay` 对不上就清空整张表直接 `return`，账号对象上留着的旧 `checkedIn` 一直没被覆盖，面板会连续几天显示「已签到」直到你手动点一次刷新。现在跨天连账号上的状态一起清成 `null`，并把「这条读数是不是今天的」判断收进 `checkinToday()`。
+- **历史思考可剥离**（对应上游 5.20.32 / issue #213）。新增配置开关 `dropHistoryThinking`（默认关）：开了之后回传给上游的**历史** assistant 消息只留 `content`，`reasoning_content` 一律删掉。自己这一轮新聚合出来的思考仍然照常回给客户端。开关走模块级快照 `PLUGIN_CONFIG` —— `handleChat` 在路由层拿不到 `context.config`，只能由 `validateConfig` / `createTools` 顺手写一份进去。
+
+没跟的：`pollIntervalMs` 主动轮询、账号文件导入（`transfer`）、模型标签槽（`keyed`）、图标样式、`deviceSdkEnabled`。这几条都依赖 DSH 宿主的设置页、槽位或插件生命周期，Toonflow 的 tools 插件里没有对应机制。
 
 ---
 
